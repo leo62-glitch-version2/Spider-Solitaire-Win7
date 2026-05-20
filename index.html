@@ -53,26 +53,26 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  padding: 25px 20px 10px 20px; /* Espace pour descendre les cartes comme sur la capture */
+  padding: 35px 30px 10px 30px; /* Plus d'espace autour du tapis de jeu */
 }
 
 /* TABLEAU */
 #tableau {
   display: flex;
-  gap: 12px;
+  gap: 18px; /* Espacement horizontal augmenté entre les colonnes */
   justify-content: center;
   flex: 1;
   align-items: flex-start;
 }
 .column {
   flex: 1;
-  max-width: 95px;
+  max-width: 115px; /* Largeur maximale augmentée pour de plus grosses cartes */
   position: relative;
 }
 .card-slot {
   width: 100%;
-  height: 120px;
-  border: 1px dashed rgba(255,255,255,0.15);
+  height: 153px;
+  border: 1px dashed rgba(255,255,255,0.12);
   border-radius: 6px;
   position: absolute;
   top: 0;
@@ -106,21 +106,21 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   pointer-events: none;
 }
 
-/* BOTTOM BAR BAR WITH PILE AND STATS */
+/* BOTTOM BAR WITH PILE AND STATS */
 #bottom-bar {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 150px;
-  padding: 0 40px 25px 40px;
+  height: 180px;
+  padding: 0 50px 30px 50px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   pointer-events: none;
 }
 
-/* STOCK AREA (Fidèle à l'effet d'épaisseur de Windows 7) */
+/* STOCK AREA */
 #stock-area {
   display: flex;
   position: relative;
@@ -188,7 +188,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   <div id="bottom-bar">
     <div></div> 
     
-    <div style="display: flex; align-items: flex-end; gap: 60px;">
+    <div style="display: flex; align-items: flex-end; gap: 65px;">
       <div id="stock-area"></div>
       <div id="status-area">
         <div>Score : <span id="score-val">500</span></div>
@@ -205,7 +205,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 <script>
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const CARD_W = 73.15, CARD_H = 97.6;
-let DISPLAY_W = 85, DISPLAY_H = 114;
+let DISPLAY_W = 105, DISPLAY_H = 140; /* Dimensions de base augmentées */
 let SCALE_X, SCALE_Y;
 
 const SUITS = ['clubs','diamonds','hearts','spades'];
@@ -213,10 +213,10 @@ const SUIT_ROW = {clubs:0, diamonds:1, hearts:2, spades:3};
 const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const RANK_VAL = {A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
 
-// Distances de chevauchement d'origine Windows 7
-const OVERLAP_FACE = 28, OVERLAP_BACK = 14;
+// Ajustement de l'écart vertical entre les cartes
+const OVERLAP_FACE = 30, OVERLAP_BACK = 16;
 
-let difficulty = 1; // Par défaut 1 couleur (Spades) comme sur ta capture
+let difficulty = 1; 
 let columns = [], stock = [], completed = [], score = 500, moves = 0;
 let dragState = null;
 
@@ -292,10 +292,11 @@ function render() {
 
 function getCardWidth() {
   const tab = document.getElementById('tableau');
-  if (!tab) return 85;
-  const tw = tab.clientWidth || window.innerWidth - 40;
-  const w = Math.floor((tw - 9 * 12) / 10); 
-  return Math.min(Math.max(w, 65), 100);
+  if (!tab) return 105;
+  const tw = tab.clientWidth || window.innerWidth - 60;
+  // Prise en compte de 10 colonnes et 9 espaces de 18px
+  const w = Math.floor((tw - 9 * 18) / 10); 
+  return Math.min(Math.max(w, 75), 115); /* Augmenté à 115px max pour remplir l'écran */
 }
 
 function renderTableau() {
@@ -355,12 +356,10 @@ function renderStock() {
   area.innerHTML = '';
   if (stock.length === 0) return;
 
-  // Rendu de la pioche avec effet d'empilement (superposées décale de 12px vers la gauche)
   const sW = getCardWidth();
   const sH = Math.round(sW * (CARD_H / CARD_W));
   
-  // Définit la taille globale du conteneur de la pioche
-  area.style.width = (sW + (stock.length - 1) * 12) + 'px';
+  area.style.width = (sW + (stock.length - 1) * 14) + 'px';
   area.style.height = sH + 'px';
 
   for (let i = 0; i < stock.length; i++) {
@@ -368,7 +367,7 @@ function renderStock() {
     cardVisual.className = 'stock-card-visual';
     cardVisual.style.width = sW + 'px';
     cardVisual.style.height = sH + 'px';
-    cardVisual.style.left = (i * 12) + 'px';
+    cardVisual.style.left = (i * 14) + 'px'; /* Décalage de la pioche légèrement accentué */
     cardVisual.style.zIndex = i;
 
     const inner = document.createElement('div');
@@ -376,7 +375,6 @@ function renderStock() {
     inner.style.cssText = backBg(0);
     cardVisual.appendChild(inner);
 
-    // Seule la carte du dessus (la plus à droite) déclenche la distribution
     if (i === stock.length - 1) {
       cardVisual.onclick = dealFromStock;
     }

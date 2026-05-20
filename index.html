@@ -176,7 +176,22 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   pointer-events: none;
 }
 
-/* STOCK AREA */
+/* COMPLETED PILES AREA (BAS A GAUCHE) */
+#completed-area {
+  display: flex;
+  position: relative;
+  pointer-events: auto;
+}
+.completed-card-visual {
+  position: absolute;
+  bottom: 0;
+  border-radius: 6px;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.35);
+  overflow: hidden;
+  background-color: white;
+}
+
+/* STOCK AREA (BAS A DROITE) */
 #stock-area {
   display: flex;
   position: relative;
@@ -212,6 +227,21 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 #drag-ghost .card {
   position: absolute !important;
 }
+
+/* OVERLAY POUR MESSAGES */
+#msg-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 10000;
+}
+#msg-overlay h2 { color: #fff; font-size: 26px; margin-bottom: 12px; }
+#msg-overlay p { color: #eee; margin-bottom: 20px; font-size: 15px; }
+#msg-overlay button {
+  background: #fff; border: 1px solid #aaa; border-radius: 4px;
+  color: #000; padding: 6px 20px; font-size: 13px; cursor: pointer;
+}
+#msg-overlay button:hover { background: #e5f1fb; }
 </style>
 </head>
 <body>
@@ -239,7 +269,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   </div>
 
   <div id="bottom-bar">
-    <div></div> 
+    <div id="completed-area"></div> 
     
     <div style="display: flex; align-items: flex-end; gap: 65px;">
       <div id="stock-area"></div>
@@ -352,6 +382,7 @@ function render() {
   document.getElementById('moves-val').textContent = moves;
   renderTableau();
   renderStock();
+  renderCompleted();
 }
 
 function getCardWidth() {
@@ -445,6 +476,36 @@ function renderStock() {
   }
 }
 
+// Génère l'affichage visuel des paquets terminés en bas à gauche
+function renderCompleted() {
+  const area = document.getElementById('completed-area');
+  area.innerHTML = '';
+  if (completed.length === 0) return;
+
+  const cW = getCardWidth();
+  const cH = Math.round(cW * (CARD_H / CARD_W));
+
+  area.style.width = (cW + (completed.length - 1) * 14) + 'px';
+  area.style.height = cH + 'px';
+
+  for (let i = 0; i < completed.length; i++) {
+    const cardVisual = document.createElement('div');
+    cardVisual.className = 'completed-card-visual';
+    cardVisual.style.width = cW + 'px';
+    cardVisual.style.height = cH + 'px';
+    cardVisual.style.left = (i * 14) + 'px';
+    cardVisual.style.zIndex = i;
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+    // On affiche un Roi (K) de la couleur du paquet complété, comme sur Windows !
+    inner.style.cssText = cardBg(completed[i].suit, 'K');
+    cardVisual.appendChild(inner);
+
+    area.appendChild(cardVisual);
+  }
+}
+
 // ── DRAG & DROP ────────────────────────────────────────────────────────────
 function isSequence(col, fromRow) {
   const cards = columns[col];
@@ -456,7 +517,6 @@ function isSequence(col, fromRow) {
   return true;
 }
 
-// Permet de poser une carte sur une autre si elle a une valeur immédiatement inférieure (ex: 6 sur 7)
 function canStack(bottom, top) {
   return RANK_VAL[bottom.rank] === RANK_VAL[top.rank] + 1;
 }
@@ -542,13 +602,12 @@ function onCardMouseDown(e) {
   buildGhost(ci, ri);
   positionGhost(e.clientX, e.clientY);
   
-  // Applique l'opacité à la carte cliquée ET toutes celles qui la suivent en dessous
   const colEl = document.querySelector(`.column[data-col="${ci}"]`);
   if (colEl) {
     const cards = colEl.querySelectorAll('.card');
     cards.forEach(card => {
       if (parseInt(card.dataset.row) >= ri) {
-        card.style.opacity = '0'; // Masquées complètement en arrière-plan pour ne pas faire doublon
+        card.style.opacity = '0';
       }
     });
   }
@@ -684,6 +743,8 @@ function checkCompletion(col) {
     if (cards[i].suit !== cards[i+1].suit) return;
     if (RANK_VAL[cards[i].rank] !== RANK_VAL[cards[i+1].rank] + 1) return;
   }
+  
+  // Sauvegarde le type de couleur pour l'affichage en bas à gauche
   completed.push({suit: topCard.suit});
   columns[col].splice(start, 13);
   if (columns[col].length > 0) columns[col][columns[col].length-1].faceUp = true;

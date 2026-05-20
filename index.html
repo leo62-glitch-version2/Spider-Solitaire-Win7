@@ -9,56 +9,42 @@
 html, body {
   width: 100%; height: 100%;
   overflow: hidden;
+  background-color: #000;
 }
 body { font-family: 'Segoe UI', Arial, sans-serif; }
+
 #game {
   background-image: url('bg.jpg');
   background-size: cover;
   background-position: center;
   width: 100vw;
   height: 100vh;
-  min-height: 100vh;
-  padding: 10px;
-  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
-/* TOP BAR */
-#top-bar {
+/* CLASSIC WINDOWS MENU BAR */
+#menu-bar {
+  background: #ffffff;
+  height: 24px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  padding-left: 12px;
+  font-size: 12px;
+  color: #000000;
+  border-bottom: 1px solid #d9d9d9;
   flex-shrink: 0;
+  gap: 15px;
 }
-#score-area {
-  background: rgba(0,0,0,0.5);
-  border-radius: 6px;
-  padding: 4px 14px;
-  color: #fff;
-  font-size: 14px;
-  font-weight: bold;
-}
-#diff-row { display: flex; gap: 6px; align-items: center; }
-#diff-row label { color: rgba(255,255,255,0.85); font-size: 13px; }
-#diff-select {
-  background: rgba(0,0,0,0.45); color: white; border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 4px; font-size: 13px; padding: 3px 6px;
-}
-#btn-new {
-  background: linear-gradient(180deg, #4a9e1e 0%, #23650c 100%);
-  border: 1px solid #7dd45a;
-  border-radius: 6px;
-  color: white;
-  padding: 6px 16px;
-  font-size: 13px;
+.menu-item {
   cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  padding: 2px 6px;
 }
-#btn-new:hover { filter: brightness(1.2); }
+.menu-item:hover {
+  background-color: #e5f1fb;
+}
 
 /* MAIN PLAY AREA */
 #main-area {
@@ -67,29 +53,27 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  padding: 25px 20px 10px 20px; /* Espace pour descendre les cartes comme sur la capture */
 }
 
 /* TABLEAU */
 #tableau {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   justify-content: center;
   flex: 1;
   align-items: flex-start;
-  padding: 0 4px;
 }
 .column {
   flex: 1;
-  max-width: 90px;
-  min-height: 120px;
+  max-width: 95px;
   position: relative;
 }
 .card-slot {
   width: 100%;
-  height: 110px;
-  border: 1px dashed rgba(255,255,255,0.2);
-  border-radius: 8px;
-  background: rgba(0,0,0,0.15);
+  height: 120px;
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: 6px;
   position: absolute;
   top: 0;
 }
@@ -97,29 +81,22 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 /* CARDS */
 .card {
   width: 100%;
-  height: 110px;
-  border-radius: 8px;
+  border-radius: 6px;
   position: absolute;
   cursor: grab;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.3);
-  box-shadow: 1px 2px 5px rgba(0,0,0,0.6);
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.35);
   background-color: white;
-  transition: box-shadow 0.1s;
 }
 .card:active { cursor: grabbing; }
 .card.dragging {
-  opacity: 0.85;
-  box-shadow: 4px 8px 20px rgba(0,0,0,0.7);
+  opacity: 0.9;
+  box-shadow: 3px 6px 15px rgba(0,0,0,0.5);
   z-index: 9999 !important;
   cursor: grabbing;
-  transition: none;
 }
 .card.drop-target {
-  box-shadow: 0 0 0 3px #00ff88, 1px 3px 8px rgba(0,0,0,0.7);
-}
-.card.invalid-drop {
-  box-shadow: 0 0 0 3px #ff4444, 1px 3px 8px rgba(0,0,0,0.7);
+  box-shadow: 0 0 0 3px #6baed6, 1px 2px 6px rgba(0,0,0,0.4);
 }
 .card-inner {
   width: 100%;
@@ -129,85 +106,44 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   pointer-events: none;
 }
 
-/* BOTTOM BAR */
+/* BOTTOM BAR BAR WITH PILE AND STATS */
 #bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  padding: 0 40px 25px 40px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-top: 8px;
-  padding: 0 4px;
-  flex-shrink: 0;
-  height: 130px;
-}
-
-/* COMPLETED AREA - bottom left */
-#completed-area {
-  display: flex;
-  gap: 5px;
-  align-items: flex-end;
-}
-.completed-suit {
-  width: 72px;
-  height: 100px;
-  border: 2px dashed rgba(255,255,255,0.35);
-  border-radius: 8px;
-  background: rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255,255,255,0.4);
-  font-size: 24px;
-  flex-shrink: 0;
-}
-.completed-suit.has-card {
-  border-color: gold;
-}
-.completed-suit .card-inner {
-  width: 72px;
-  height: 100px;
-}
-
-/* STOCK AREA - bottom right */
-#stock-area {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-}
-#stock-pile {
-  width: 72px;
-  height: 100px;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  border: 2px solid rgba(255,255,255,0.4);
-  box-shadow: 1px 2px 5px rgba(0,0,0,0.6);
-  transition: box-shadow 0.1s;
-  position: relative;
-  flex-shrink: 0;
-}
-#stock-pile:hover { box-shadow: 0 0 0 2px gold, 1px 3px 8px rgba(0,0,0,0.7); }
-#stock-pile-inner {
-  width: 100%; height: 100%;
-  background-image: url('spritesheet.png');
-  background-repeat: no-repeat;
   pointer-events: none;
 }
-.empty-stock {
-  width: 72px; height: 100px;
-  border: 2px dashed rgba(255,255,255,0.3);
-  border-radius: 8px;
-  background: rgba(0,0,0,0.2);
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,0.4);
-  font-size: 32px;
+
+/* STOCK AREA (Fidèle à l'effet d'épaisseur de Windows 7) */
+#stock-area {
+  display: flex;
+  position: relative;
+  pointer-events: auto;
 }
-.stock-count-badge {
+.stock-card-visual {
   position: absolute;
-  bottom: 5px; right: 7px;
-  background: rgba(0,0,0,0.65);
-  color: white; font-size: 12px;
-  border-radius: 8px; padding: 1px 6px;
-  font-weight: bold;
+  bottom: 0;
+  border-radius: 6px;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.35);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* BOTTOM RIGHT STATUS AREA */
+#status-area {
+  display: flex;
+  gap: 25px;
+  color: #ffffff;
+  font-size: 11px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  padding-bottom: 5px;
 }
 
 /* DRAG GHOST */
@@ -225,104 +161,85 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 /* OVERLAY */
 #msg-overlay {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0,0,0,0.6);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   z-index: 10000;
-  border-radius: 8px;
 }
-#msg-overlay h2 { color: gold; font-size: 30px; text-shadow: 0 2px 8px #000; margin-bottom: 16px; }
-#msg-overlay p { color: #fff; margin-bottom: 22px; font-size: 17px; }
+#msg-overlay h2 { color: #fff; font-size: 26px; margin-bottom: 12px; }
+#msg-overlay p { color: #eee; margin-bottom: 20px; font-size: 15px; }
 #msg-overlay button {
-  background: linear-gradient(180deg, #5aac2c 0%, #2d7a10 100%);
-  border: 2px solid #7dd45a;
-  border-radius: 8px;
-  color: white;
-  padding: 10px 30px;
-  font-size: 16px;
-  cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+  background: #fff; border: 1px solid #aaa; border-radius: 4px;
+  color: #000; padding: 6px 20px; font-size: 13px; cursor: pointer;
 }
-#msg-overlay button:hover { filter: brightness(1.15); }
+#msg-overlay button:hover { background: #e5f1fb; }
 </style>
 </head>
 <body>
 <div id="game">
-  <div id="top-bar">
-    <div id="diff-row">
-      <label>Difficulté:</label>
-      <select id="diff-select">
-        <option value="1">1 couleur</option>
-        <option value="2">2 couleurs</option>
-        <option value="4">4 couleurs</option>
-      </select>
-      <button id="btn-new">Nouvelle partie</button>
-    </div>
-    <div id="score-area">Score: <span id="score-val">500</span> &nbsp;|&nbsp; Mouvements: <span id="moves-val">0</span></div>
+  <div id="menu-bar">
+    <div class="menu-item" id="menu-partie">Partie</div>
+    <div class="menu-item" id="menu-aide">?</div>
   </div>
 
   <div id="main-area">
     <div id="tableau"></div>
-    <div id="bottom-bar">
-      <div id="completed-area"></div>
+  </div>
+
+  <div id="bottom-bar">
+    <div></div> 
+    
+    <div style="display: flex; align-items: flex-end; gap: 60px;">
       <div id="stock-area"></div>
+      <div id="status-area">
+        <div>Score : <span id="score-val">500</span></div>
+        <div>Coups : <span id="moves-val">0</span></div>
+      </div>
     </div>
   </div>
 
   <div id="msg-overlay" style="display:none"></div>
 </div>
 
-<!-- Drag ghost container -->
 <div id="drag-ghost"></div>
 
 <script>
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const CARD_W = 73, CARD_H = 98;
-// We'll compute display sizes dynamically
-let DISPLAY_W = 80, DISPLAY_H = 110;
+const CARD_W = 73.15, CARD_H = 97.6;
+let DISPLAY_W = 85, DISPLAY_H = 114;
 let SCALE_X, SCALE_Y;
 
 const SUITS = ['clubs','diamonds','hearts','spades'];
 const SUIT_ROW = {clubs:0, diamonds:1, hearts:2, spades:3};
 const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const RANK_VAL = {A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
-const OVERLAP_FACE = 28, OVERLAP_BACK = 18;
 
-let difficulty = 1;
+// Distances de chevauchement d'origine Windows 7
+const OVERLAP_FACE = 28, OVERLAP_BACK = 14;
+
+let difficulty = 1; // Par défaut 1 couleur (Spades) comme sur ta capture
 let columns = [], stock = [], completed = [], score = 500, moves = 0;
-
-// Drag state
-let dragState = null; // { col, row, cards, startX, startY, ghost }
+let dragState = null;
 
 function updateScale() {
   SCALE_X = DISPLAY_W / CARD_W;
   SCALE_Y = DISPLAY_H / CARD_H;
 }
 
-// ── SPRITESHEET HELPERS ────────────────────────────────────────────────────
-// The spritesheet is 949x490 = 13 cols × 5 rows, each native card = 73×98px
-// We scale it so each cell fits exactly DISPLAY_W × DISPLAY_H
-function spriteCss(col, row, w, h) {
-  // w, h = target display size of one card
-  const scaleX = w / CARD_W;
-  const scaleY = h / CARD_H;
-  const bx = -(col * w);
-  const by = -(row * h);
-  const totalW = CARD_W * 13 * scaleX;
-  const totalH = CARD_H * 5 * scaleY;
-  return `width:${w}px; height:${h}px; background-position:${bx}px ${by}px; background-size:${totalW}px ${totalH}px;`;
-}
-
-function cardBg(suit, rank, w, h) {
-  w = w || DISPLAY_W; h = h || DISPLAY_H;
+function cardBg(suit, rank) {
+  updateScale();
   const col = RANKS.indexOf(rank);
   const row = SUIT_ROW[suit];
-  return spriteCss(col, row, w, h);
+  const bx = -(col * CARD_W * SCALE_X);
+  const by = -(row * CARD_H * SCALE_Y);
+  return `background-position: ${bx}px ${by}px; background-size: ${CARD_W * 13 * SCALE_X}px ${CARD_H * 5 * SCALE_Y}px;`;
 }
-function backBg(idx, w, h) {
-  w = w || DISPLAY_W; h = h || DISPLAY_H;
-  idx = idx || 0;
-  return spriteCss(idx, 4, w, h);
+
+function backBg(idx) {
+  updateScale();
+  idx = idx || 0; 
+  const bx = -(idx * CARD_W * SCALE_X);
+  const by = -(4 * CARD_H * SCALE_Y); 
+  return `background-position: ${bx}px ${by}px; background-size: ${CARD_W * 13 * SCALE_X}px ${CARD_H * 5 * SCALE_Y}px;`;
 }
 
 // ── DECK / GAME INIT ───────────────────────────────────────────────────────
@@ -344,7 +261,6 @@ function makeDeck(suits_count) {
 }
 
 function newGame() {
-  difficulty = parseInt(document.getElementById('diff-select').value);
   score = 500; moves = 0;
   const deck = makeDeck(difficulty);
   columns = [];
@@ -370,18 +286,16 @@ function newGame() {
 function render() {
   document.getElementById('score-val').textContent = score;
   document.getElementById('moves-val').textContent = moves;
-  renderStock();
-  renderCompleted();
   renderTableau();
+  renderStock();
 }
 
 function getCardWidth() {
-  // Compute based on tableau width
   const tab = document.getElementById('tableau');
-  if (!tab) return 80;
-  const tw = tab.clientWidth || window.innerWidth - 20;
-  const w = Math.floor((tw - 9 * 8) / 10); // 10 cols, 9 gaps of 8px
-  return Math.min(Math.max(w, 60), 110);
+  if (!tab) return 85;
+  const tw = tab.clientWidth || window.innerWidth - 40;
+  const w = Math.floor((tw - 9 * 12) / 10); 
+  return Math.min(Math.max(w, 65), 100);
 }
 
 function renderTableau() {
@@ -395,6 +309,7 @@ function renderTableau() {
     const col = document.createElement('div');
     col.className = 'column';
     col.dataset.col = ci;
+    col.style.width = DISPLAY_W + 'px';
 
     const slot = document.createElement('div');
     slot.className = 'card-slot';
@@ -438,40 +353,34 @@ function createCardEl(c, ci, ri) {
 function renderStock() {
   const area = document.getElementById('stock-area');
   area.innerHTML = '';
-  if (stock.length === 0) {
-    area.innerHTML = '<div class="empty-stock">🃏</div>';
-    return;
-  }
-  const pile = document.createElement('div');
-  pile.id = 'stock-pile';
-  const inner = document.createElement('div');
-  inner.id = 'stock-pile-inner';
-  inner.className = 'card-inner';
-  inner.style.cssText = backBg(1);
-  pile.appendChild(inner);
-  const badge = document.createElement('div');
-  badge.className = 'stock-count-badge';
-  badge.textContent = stock.length;
-  pile.appendChild(badge);
-  pile.onclick = dealFromStock;
-  area.appendChild(pile);
-}
+  if (stock.length === 0) return;
 
-function renderCompleted() {
-  const area = document.getElementById('completed-area');
-  area.innerHTML = '';
-  for (let i = 0; i < 8; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'completed-suit' + (completed[i] ? ' has-card' : '');
-    if (completed[i]) {
-      const inner = document.createElement('div');
-      inner.className = 'card-inner';
-      inner.style.cssText = cardBg(completed[i].suit, 'K');
-      slot.appendChild(inner);
-    } else {
-      slot.textContent = '♠';
+  // Rendu de la pioche avec effet d'empilement (superposées décale de 12px vers la gauche)
+  const sW = getCardWidth();
+  const sH = Math.round(sW * (CARD_H / CARD_W));
+  
+  // Définit la taille globale du conteneur de la pioche
+  area.style.width = (sW + (stock.length - 1) * 12) + 'px';
+  area.style.height = sH + 'px';
+
+  for (let i = 0; i < stock.length; i++) {
+    const cardVisual = document.createElement('div');
+    cardVisual.className = 'stock-card-visual';
+    cardVisual.style.width = sW + 'px';
+    cardVisual.style.height = sH + 'px';
+    cardVisual.style.left = (i * 12) + 'px';
+    cardVisual.style.zIndex = i;
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+    inner.style.cssText = backBg(0);
+    cardVisual.appendChild(inner);
+
+    // Seule la carte du dessus (la plus à droite) déclenche la distribution
+    if (i === stock.length - 1) {
+      cardVisual.onclick = dealFromStock;
     }
-    area.appendChild(slot);
+    area.appendChild(cardVisual);
   }
 }
 
@@ -527,7 +436,6 @@ function hideGhost() {
 }
 
 function getColumnFromPoint(x, y) {
-  // Find which column element is under the point (ignoring ghost)
   const ghost = document.getElementById('drag-ghost');
   ghost.style.pointerEvents = 'none';
   const el = document.elementFromPoint(x, y);
@@ -538,14 +446,12 @@ function getColumnFromPoint(x, y) {
 }
 
 function highlightDropTarget(ci) {
-  // Remove previous highlights
   document.querySelectorAll('.card.drop-target').forEach(e => e.classList.remove('drop-target'));
   if (ci < 0 || ci >= 10) return;
   const col = columns[ci];
   if (col.length === 0) {
-    // highlight the slot
     const colEl = document.querySelector(`.column[data-col="${ci}"] .card-slot`);
-    if (colEl) colEl.style.borderColor = 'rgba(0,255,136,0.6)';
+    if (colEl) colEl.style.borderColor = 'rgba(255,255,255,0.4)';
     return;
   }
   const lastCard = document.querySelector(`.column[data-col="${ci}"] .card:last-of-type`);
@@ -572,7 +478,6 @@ function onCardMouseDown(e) {
   };
   buildGhost(ci, ri);
   positionGhost(e.clientX, e.clientY);
-  // Hide original cards being dragged
   const colEl = document.querySelector(`.column[data-col="${ci}"]`);
   if (colEl) {
     const cards = colEl.querySelectorAll('.card');
@@ -616,12 +521,10 @@ function onMouseUp(e) {
       return;
     }
   }
-  // Invalid drop — restore
   dragState = null;
   render();
 }
 
-// Touch support
 function onCardTouchStart(e) {
   const touch = e.touches[0];
   const cardEl = e.currentTarget;
@@ -712,8 +615,7 @@ function checkCompletion(col) {
     if (cards[i].suit !== cards[i+1].suit) return;
     if (RANK_VAL[cards[i].rank] !== RANK_VAL[cards[i+1].rank] + 1) return;
   }
-  const suit = topCard.suit;
-  completed.push({suit});
+  completed.push({suit: topCard.suit});
   columns[col].splice(start, 13);
   if (columns[col].length > 0) columns[col][columns[col].length-1].faceUp = true;
   score += 100;
@@ -725,7 +627,7 @@ function dealFromStock() {
   if (stock.length === 0) return;
   for (let i = 0; i < 10; i++) {
     if (columns[i].length === 0) {
-      showMsg('Impossible de distribuer', 'Toutes les colonnes doivent contenir au moins une carte.');
+      showMsg('Distribution impossible', 'Toutes les colonnes doivent contenir au moins une carte.');
       return;
     }
   }
@@ -742,7 +644,7 @@ function dealFromStock() {
 
 function showWin() {
   const overlay = document.getElementById('msg-overlay');
-  overlay.innerHTML = `<h2>🎉 Félicitations !</h2><p>Vous avez gagné avec un score de <strong>${score}</strong> !</p><button onclick="document.getElementById('msg-overlay').style.display='none';newGame()">Nouvelle partie</button>`;
+  overlay.innerHTML = `<h2>🎉 Félicitations !</h2><p>Partie gagnée avec un score de <strong>${score}</strong> !</p><button onclick="document.getElementById('msg-overlay').style.display='none';newGame()">Nouvelle partie</button>`;
   overlay.style.display = 'flex';
 }
 function showMsg(title, msg) {
@@ -751,9 +653,14 @@ function showMsg(title, msg) {
   overlay.style.display = 'flex';
 }
 
-document.getElementById('btn-new').onclick = newGame;
+// Menu actions
+document.getElementById('menu-partie').onclick = () => {
+  if(confirm("Lancer une nouvelle partie ?")) newGame();
+};
+document.getElementById('menu-aide').onclick = () => {
+  alert("Spider Solitaire - Clone Windows 7 fidèle.");
+};
 
-// Re-render on resize for responsive card sizing
 window.addEventListener('resize', () => render());
 
 newGame();

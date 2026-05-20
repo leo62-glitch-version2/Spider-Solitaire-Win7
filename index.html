@@ -176,12 +176,11 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   pointer-events: none;
 }
 
-/* COMPLETED PILES AREA (ALIGNÉ SUR LA 2ÈME PILE) */
+/* COMPLETED PILES AREA */
 #completed-area {
   display: flex;
   position: relative;
   pointer-events: auto;
-  /* Aligné dynamiquement grâce au JS pour correspondre à la deuxième colonne */
 }
 .completed-card-visual {
   position: absolute;
@@ -485,14 +484,18 @@ function renderCompleted() {
   const cW = getCardWidth();
   const cH = Math.round(cW * (CARD_H / CARD_W));
 
-  // --- LOGIQUE DE L'ALIGNEMENT SUR LA 2ÈME COLONNE ---
-  // On calcule l'écart exact du bord gauche de l'écran par rapport à la grille du jeu
-  const mainArea = document.getElementById('main-area');
-  const paddingLeft = parseInt(window.getComputedStyle(mainArea).paddingLeft) || 30;
-  
-  // Espace occupé par la première colonne (largeur + l'espace 'gap' entre les colonnes, ici 18px)
-  const targetOffset = paddingLeft + cW + 18 - 50; // (-50 pour compenser le padding de #bottom-bar)
-  area.style.marginLeft = Math.max(0, targetOffset) + 'px';
+  // --- ALIGNEMENT EXACT SUR LA DEUXIÈME PILE ---
+  // On récupère la position réelle de la deuxième colonne (index 1) du tableau du haut
+  const cols = document.querySelectorAll('#tableau .column');
+  if (cols && cols.length > 1) {
+    const secondColRect = cols[1].getBoundingClientRect();
+    const bottomBarRect = document.getElementById('bottom-bar').getBoundingClientRect();
+    
+    // On calcule la position X par rapport à la barre du bas
+    const targetLeft = secondColRect.left - bottomBarRect.left;
+    area.style.position = 'absolute';
+    area.style.left = targetLeft + 'px';
+  }
 
   area.style.width = (cW + (completed.length - 1) * 14) + 'px';
   area.style.height = cH + 'px';
@@ -639,6 +642,7 @@ function onMouseMove(e) {
   }
 }
 
+/* [Touch Logic...] */
 function onMouseUp(e) {
   document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mouseup', onMouseUp);
@@ -688,7 +692,6 @@ function onCardTouchStart(e) {
   document.addEventListener('touchend', onTouchEnd);
 }
 
-// [Rest of Touch Logic...]
 function onTouchMove(e) {
   e.preventDefault();
   if (!dragState) return;

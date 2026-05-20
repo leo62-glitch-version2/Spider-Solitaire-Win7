@@ -25,7 +25,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   position: relative;
 }
 
-/* CLASSIC WINDOWS 7 MENU BAR */
+/* CLASSIC WINDOWS MENU BAR */
 #menu-bar {
   background: #ffffff;
   height: 24px;
@@ -38,12 +38,17 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   flex-shrink: 0;
   gap: 15px;
   position: relative;
-  z-index: 10005;
+  z-index: 10001;
+}
+.menu-item-container {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 .menu-item {
   cursor: pointer;
-  padding: 2px 8px;
-  position: relative;
+  padding: 2px 6px;
 }
 .menu-item:hover, .menu-item.active {
   background-color: #e5f1fb;
@@ -51,27 +56,50 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 
 /* DROP DOWN MENU */
 .dropdown-menu {
-  position: absolute;
-  top: 23px;
-  left: 0;
-  background: #f2f2f2;
-  border: 1px solid #979797;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
   display: none;
-  flex-direction: column;
+  position: absolute;
+  top: 24px;
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
   min-width: 150px;
-  padding: 2px 0;
+  list-style: none;
 }
-.dropdown-item {
-  padding: 6px 20px;
-  font-size: 12px;
-  color: #000;
+.dropdown-menu li {
+  padding: 6px 12px;
   cursor: pointer;
+}
+.dropdown-menu li:hover, .dropdown-menu li.active {
+  background-color: #e5f1fb;
+}
+
+/* SUBMENU FOR COLORS */
+.submenu-container {
+  position: relative;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
-.dropdown-item:hover {
-  background-color: #91c9f7;
+.submenu {
+  display: none;
+  position: absolute;
+  top: -1px;
+  left: 148px;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
+  min-width: 120px;
+  list-style: none;
+}
+.submenu li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.submenu li .check {
+  font-weight: bold;
+  color: #2b579a;
 }
 
 /* MAIN PLAY AREA */
@@ -81,27 +109,27 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  padding: 30px 40px 10px 40px; /* Plus d'espace pour aérer le tapis de jeu */
+  padding: 35px 30px 10px 30px;
 }
 
 /* TABLEAU */
 #tableau {
   display: flex;
-  gap: 18px; /* Espacement horizontal augmenté entre les colonnes comme demandé */
+  gap: 18px;
   justify-content: center;
   flex: 1;
   align-items: flex-start;
 }
 .column {
   flex: 1;
-  max-width: 120px; /* Largeur maximale augmentée pour obtenir de plus grosses cartes */
+  max-width: 115px;
   position: relative;
 }
 .card-slot {
   width: 100%;
-  border: 1px dashed rgba(255,255,255,0.2);
-  border-radius: 8px;
-  background: rgba(0,0,0,0.15);
+  height: 153px;
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 6px;
   position: absolute;
   top: 0;
 }
@@ -109,23 +137,22 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 /* CARDS */
 .card {
   width: 100%;
-  border-radius: 8px;
+  border-radius: 6px;
   position: absolute;
   cursor: grab;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.25);
-  box-shadow: 1px 2px 5px rgba(0,0,0,0.5);
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.35);
   background-color: white;
 }
 .card:active { cursor: grabbing; }
 .card.dragging {
   opacity: 0.9;
-  box-shadow: 4px 8px 20px rgba(0,0,0,0.6);
+  box-shadow: 3px 6px 15px rgba(0,0,0,0.5);
   z-index: 9999 !important;
   cursor: grabbing;
 }
 .card.drop-target {
-  box-shadow: 0 0 0 3px #00ff88, 1px 3px 8px rgba(0,0,0,0.6);
+  box-shadow: 0 0 0 3px #6baed6, 1px 2px 6px rgba(0,0,0,0.4);
 }
 .card-inner {
   width: 100%;
@@ -135,111 +162,86 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   pointer-events: none;
 }
 
-/* BOTTOM BAR WITH PILES AND STATS */
+/* BARRE DU BAS (PIOCHE + SCORES UNIQUEMENT) */
 #bottom-bar {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 160px;
-  padding: 0 60px 25px 60px;
+  height: 180px;
+  padding: 0 50px 30px 50px;
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-end; /* On force tout à rester calé à droite */
   pointer-events: none;
 }
-#completed-area, #stock-area {
+
+/* ZONE INDÉPENDANTE POUR LES PAQUETS TERMINÉS */
+#completed-area {
   display: flex;
-  align-items: flex-end;
+  position: absolute;
+  bottom: 30px; /* Aligné sur le bas comme la pioche */
+  pointer-events: auto;
+  z-index: 10;
+}
+.completed-card-visual {
+  position: absolute;
+  bottom: 0;
+  border-radius: 6px;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.35);
+  overflow: hidden;
+  background-color: white;
+}
+
+/* STOCK AREA (BAS A DROITE) */
+#stock-area {
+  display: flex;
+  position: relative;
   pointer-events: auto;
 }
-#completed-area { gap: 6px; }
-
-.completed-suit {
-  border: 2px dashed rgba(255,255,255,0.2);
-  border-radius: 8px;
-  background: rgba(0,0,0,0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255,255,255,0.3);
-  font-size: 24px;
-}
-.completed-suit.has-card { border-color: gold; }
-
-/* STOCK PILE */
-#stock-pile {
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.4);
-  box-shadow: 1px 2px 5px rgba(0,0,0,0.6);
-  position: relative;
-}
-.empty-stock {
-  border: 2px dashed rgba(255,255,255,0.2);
-  border-radius: 8px;
-  background: rgba(0,0,0,0.15);
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,0.3);
-  font-size: 28px;
-}
-.stock-count-badge {
+.stock-card-visual {
   position: absolute;
-  bottom: 5px; right: 7px;
-  background: rgba(0,0,0,0.7);
-  color: white; font-size: 11px;
-  border-radius: 8px; padding: 1px 6px;
-  font-weight: bold;
+  bottom: 0;
+  border-radius: 6px;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.35);
+  cursor: pointer;
+  overflow: hidden;
 }
 
-/* STATUS BOTTOM RIGHT */
+/* BOTTOM RIGHT STATUS AREA */
 #status-area {
   display: flex;
   gap: 25px;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 11px;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  font-family: 'Segoe UI', Arial, sans-serif;
   padding-bottom: 5px;
 }
 
-/* OPTIONS MODAL WINDOW */
-#options-modal {
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.4);
-  display: none; align-items: center; justify-content: center;
-  z-index: 20000;
+/* DRAG GHOST */
+#drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  display: none;
 }
-.modal-content {
-  background: #f0f0f0; border: 1px solid #707070;
-  width: 320px; padding: 20px; border-radius: 3px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  color: #000; font-size: 13px;
+#drag-ghost .card {
+  position: absolute !important;
 }
-.modal-content h3 { margin-bottom: 15px; font-size: 15px; font-weight: normal; color: #003399; }
-.modal-content label { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer; }
-.modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-.modal-buttons button {
-  padding: 4px 15px; min-width: 75px; font-size: 12px; cursor: pointer;
-  background: #e1e1e1; border: 1px solid #adadad; border-radius: 3px;
-}
-.modal-buttons button:hover { background: #e5f1fb; border-color: #0078d7; }
 
-/* OVERLAYS & GHOSTS */
-#drag-ghost { position: fixed; pointer-events: none; z-index: 99999; display: none; }
-#drag-ghost .card { position: relative !important; top: auto !important; }
-
+/* OVERLAY POUR MESSAGES */
 #msg-overlay {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0,0,0,0.6);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   z-index: 10000;
 }
-#msg-overlay h2 { color: gold; font-size: 28px; margin-bottom: 12px; text-shadow: 0 2px 4px #000; }
-#msg-overlay p { color: #fff; margin-bottom: 20px; font-size: 16px; }
+#msg-overlay h2 { color: #fff; font-size: 26px; margin-bottom: 12px; }
+#msg-overlay p { color: #eee; margin-bottom: 20px; font-size: 15px; }
 #msg-overlay button {
   background: #fff; border: 1px solid #aaa; border-radius: 4px;
-  color: #000; padding: 6px 22px; font-size: 13px; cursor: pointer; font-weight: bold;
+  color: #000; padding: 6px 20px; font-size: 13px; cursor: pointer;
 }
 #msg-overlay button:hover { background: #e5f1fb; }
 </style>
@@ -247,12 +249,19 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 <body>
 <div id="game">
   <div id="menu-bar">
-    <div class="menu-item" id="menu-partie">
-      Partie
-      <div class="dropdown-menu" id="partie-dropdown">
-        <div class="dropdown-item" id="item-new">Nouvelle partie <span style="color:#888">F2</span></div>
-        <div class="dropdown-item" id="item-options">Options... <span style="color:#888">F5</span></div>
-      </div>
+    <div class="menu-item-container">
+      <div class="menu-item" id="menu-partie">Partie</div>
+      <ul class="dropdown-menu" id="dropdown-partie">
+        <li id="opt-nouvelle">Nouvelle partie</li>
+        <li class="submenu-container" id="opt-options">
+          <span>Options</span> <span>&gt;</span>
+          <ul class="submenu" id="submenu-couleurs">
+            <li onclick="setDifficulty(1, event)">1 couleur <span id="check-diff-1" class="check">✓</span></li>
+            <li onclick="setDifficulty(2, event)">2 couleurs <span id="check-diff-2" class="check"></span></li>
+            <li onclick="setDifficulty(4, event)">4 couleurs <span id="check-diff-4" class="check"></span></li>
+          </ul>
+        </li>
+      </ul>
     </div>
     <div class="menu-item" id="menu-aide">?</div>
   </div>
@@ -261,10 +270,10 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
     <div id="tableau"></div>
   </div>
 
+  <div id="completed-area"></div> 
+
   <div id="bottom-bar">
-    <div id="completed-area"></div>
-    
-    <div style="display: flex; align-items: flex-end; gap: 50px;">
+    <div style="display: flex; align-items: flex-end; gap: 65px;">
       <div id="stock-area"></div>
       <div id="status-area">
         <div>Score : <span id="score-val">500</span></div>
@@ -276,34 +285,22 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   <div id="msg-overlay" style="display:none"></div>
 </div>
 
-<div id="options-modal">
-  <div class="modal-content">
-    <h3>Options de difficulté</h3>
-    <label><input type="radio" name="diff-opt" value="1" id="opt-1"> 1 couleur (Piques)</label>
-    <label><input type="radio" name="diff-opt" value="2" id="opt-2"> 2 couleurs (Piques, Cœurs)</label>
-    <label><input type="radio" name="diff-opt" value="4" id="opt-4"> 4 couleurs (Toutes)</label>
-    <div class="modal-buttons">
-      <button id="opt-ok">OK</button>
-      <button id="opt-cancel">Annuler</button>
-    </div>
-  </div>
-</div>
-
 <div id="drag-ghost"></div>
 
 <script>
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
-const CARD_W = 73, CARD_H = 98;
-let DISPLAY_W = 105, DISPLAY_H = 141; 
+const CARD_W = 73.15, CARD_H = 97.6;
+let DISPLAY_W = 105, DISPLAY_H = 140;
 let SCALE_X, SCALE_Y;
 
 const SUITS = ['clubs','diamonds','hearts','spades'];
 const SUIT_ROW = {clubs:0, diamonds:1, hearts:2, spades:3};
 const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const RANK_VAL = {A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
+
 const OVERLAP_FACE = 30, OVERLAP_BACK = 16;
 
-let difficulty = 1;
+let difficulty = 1; 
 let columns = [], stock = [], completed = [], score = 500, moves = 0;
 let dragState = null;
 
@@ -320,11 +317,12 @@ function cardBg(suit, rank) {
   const by = -(row * CARD_H * SCALE_Y);
   return `background-position: ${bx}px ${by}px; background-size: ${CARD_W * 13 * SCALE_X}px ${CARD_H * 5 * SCALE_Y}px;`;
 }
+
 function backBg(idx) {
   updateScale();
-  idx = idx || 0;
+  idx = idx || 0; 
   const bx = -(idx * CARD_W * SCALE_X);
-  const by = -(4 * CARD_H * SCALE_Y);
+  const by = -(4 * CARD_H * SCALE_Y); 
   return `background-position: ${bx}px ${by}px; background-size: ${CARD_W * 13 * SCALE_X}px ${CARD_H * 5 * SCALE_Y}px;`;
 }
 
@@ -368,6 +366,18 @@ function newGame() {
   render();
 }
 
+function setDifficulty(diff, event) {
+  if (event) event.stopPropagation();
+  difficulty = diff;
+  
+  document.getElementById('check-diff-1').textContent = diff === 1 ? '✓' : '';
+  document.getElementById('check-diff-2').textContent = diff === 2 ? '✓' : '';
+  document.getElementById('check-diff-4').textContent = diff === 4 ? '✓' : '';
+  
+  closeAllMenus();
+  newGame();
+}
+
 // ── RENDER ─────────────────────────────────────────────────────────────────
 function render() {
   document.getElementById('score-val').textContent = score;
@@ -380,9 +390,9 @@ function render() {
 function getCardWidth() {
   const tab = document.getElementById('tableau');
   if (!tab) return 105;
-  const tw = tab.clientWidth || window.innerWidth - 80;
+  const tw = tab.clientWidth || window.innerWidth - 60;
   const w = Math.floor((tw - 9 * 18) / 10); 
-  return Math.min(Math.max(w, 75), 120); /* Cartes plus grosses */
+  return Math.min(Math.max(w, 75), 115);
 }
 
 function renderTableau() {
@@ -440,48 +450,67 @@ function createCardEl(c, ci, ri) {
 function renderStock() {
   const area = document.getElementById('stock-area');
   area.innerHTML = '';
-  if (stock.length === 0) {
-    area.innerHTML = '<div class="empty-stock">🃏</div>';
-    const es = area.querySelector('.empty-stock');
-    es.style.width = DISPLAY_W + 'px'; es.style.height = DISPLAY_H + 'px';
-    return;
+  if (stock.length === 0) return;
+
+  const sW = getCardWidth();
+  const sH = Math.round(sW * (CARD_H / CARD_W));
+  
+  area.style.width = (sW + (stock.length - 1) * 14) + 'px';
+  area.style.height = sH + 'px';
+
+  for (let i = 0; i < stock.length; i++) {
+    const cardVisual = document.createElement('div');
+    cardVisual.className = 'stock-card-visual';
+    cardVisual.style.width = sW + 'px';
+    cardVisual.style.height = sH + 'px';
+    cardVisual.style.left = (i * 14) + 'px';
+    cardVisual.style.zIndex = i;
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+    inner.style.cssText = backBg(0);
+    cardVisual.appendChild(inner);
+
+    if (i === stock.length - 1) {
+      cardVisual.onclick = dealFromStock;
+    }
+    area.appendChild(cardVisual);
   }
-  const pile = document.createElement('div');
-  pile.id = 'stock-pile';
-  pile.style.width = DISPLAY_W + 'px';
-  pile.style.height = DISPLAY_H + 'px';
-
-  const inner = document.createElement('div');
-  inner.className = 'card-inner';
-  inner.style.cssText = backBg(0);
-  pile.appendChild(inner);
-
-  const badge = document.createElement('div');
-  badge.className = 'stock-count-badge';
-  badge.textContent = stock.length;
-  pile.appendChild(badge);
-
-  pile.onclick = dealFromStock;
-  area.appendChild(pile);
 }
 
 function renderCompleted() {
   const area = document.getElementById('completed-area');
   area.innerHTML = '';
-  for (let i = 0; i < 8; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'completed-suit' + (completed[i] ? ' has-card' : '');
-    slot.style.width = (DISPLAY_W * 0.9) + 'px';
-    slot.style.height = (DISPLAY_H * 0.9) + 'px';
-    if (completed[i]) {
-      const inner = document.createElement('div');
-      inner.className = 'card-inner';
-      inner.style.cssText = cardBg(completed[i].suit, 'K');
-      slot.appendChild(inner);
-    } else {
-      slot.textContent = '♠';
-    }
-    area.appendChild(slot);
+  if (completed.length === 0) return;
+
+  const cW = getCardWidth();
+  const cH = Math.round(cW * (CARD_H / CARD_W));
+
+  // --- ALIGNEMENT PARFAIT ET SÉCURISÉ ---
+  const cols = document.querySelectorAll('#tableau .column');
+  if (cols && cols.length > 1) {
+    const secondColRect = cols[1].getBoundingClientRect();
+    // Positionnement absolu direct par rapport au bord gauche du viewport global
+    area.style.left = secondColRect.left + 'px';
+  }
+
+  area.style.width = (cW + (completed.length - 1) * 14) + 'px';
+  area.style.height = cH + 'px';
+
+  for (let i = 0; i < completed.length; i++) {
+    const cardVisual = document.createElement('div');
+    cardVisual.className = 'completed-card-visual';
+    cardVisual.style.width = cW + 'px';
+    cardVisual.style.height = cH + 'px';
+    cardVisual.style.left = (i * 14) + 'px';
+    cardVisual.style.zIndex = i;
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+    inner.style.cssText = cardBg(completed[i].suit, 'K');
+    cardVisual.appendChild(inner);
+
+    area.appendChild(cardVisual);
   }
 }
 
@@ -491,6 +520,7 @@ function isSequence(col, fromRow) {
   for (let i = fromRow; i < cards.length - 1; i++) {
     if (!cards[i].faceUp || !cards[i+1].faceUp) return false;
     if (RANK_VAL[cards[i].rank] !== RANK_VAL[cards[i+1].rank] + 1) return false;
+    if (cards[i].suit !== cards[i+1].suit) return false;
   }
   return true;
 }
@@ -579,12 +609,15 @@ function onCardMouseDown(e) {
   };
   buildGhost(ci, ri);
   positionGhost(e.clientX, e.clientY);
+  
   const colEl = document.querySelector(`.column[data-col="${ci}"]`);
   if (colEl) {
     const cards = colEl.querySelectorAll('.card');
-    for (let i = ri; i < cards.length; i++) {
-      if (cards[i]) cards[i].style.opacity = '0.3';
-    }
+    cards.forEach(card => {
+      if (parseInt(card.dataset.row) >= ri) {
+        card.style.opacity = '0';
+      }
+    });
   }
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
@@ -640,12 +673,15 @@ function onCardTouchStart(e) {
   };
   buildGhost(ci, ri);
   positionGhost(touch.clientX, touch.clientY);
+  
   const colEl = document.querySelector(`.column[data-col="${ci}"]`);
   if (colEl) {
     const cards = colEl.querySelectorAll('.card');
-    for (let i = ri; i < cards.length; i++) {
-      if (cards[i]) cards[i].style.opacity = '0.3';
-    }
+    cards.forEach(card => {
+      if (parseInt(card.dataset.row) >= ri) {
+        card.style.opacity = '0';
+      }
+    });
   }
   e.preventDefault();
   document.addEventListener('touchmove', onTouchMove, {passive: false});
@@ -691,7 +727,6 @@ function onTouchEnd(e) {
   render();
 }
 
-// ── GAME LOGIC ─────────────────────────────────────────────────────────────
 function moveCards(fromCol, fromRow, toCol) {
   const cards = columns[fromCol].splice(fromRow);
   columns[toCol].push(...cards);
@@ -716,6 +751,7 @@ function checkCompletion(col) {
     if (cards[i].suit !== cards[i+1].suit) return;
     if (RANK_VAL[cards[i].rank] !== RANK_VAL[cards[i+1].rank] + 1) return;
   }
+  
   completed.push({suit: topCard.suit});
   columns[col].splice(start, 13);
   if (columns[col].length > 0) columns[col][columns[col].length-1].faceUp = true;
@@ -754,57 +790,51 @@ function showMsg(title, msg) {
   overlay.style.display = 'flex';
 }
 
-// ── WINDOWS 7 MENU INTERACTION ──────────────────────────────────────────────
+// ── MENUS LOGIC ────────────────────────────────────────────────────────────
 const menuPartie = document.getElementById('menu-partie');
-const partieDropdown = document.getElementById('partie-dropdown');
-const optionsModal = document.getElementById('options-modal');
+const dropdownPartie = document.getElementById('dropdown-partie');
+const optOptions = document.getElementById('opt-options');
+const submenuCouleurs = document.getElementById('submenu-couleurs');
 
-// Afficher / Masquer le menu déroulant
-menuPartie.addEventListener('click', (e) => {
+menuPartie.onclick = (e) => {
   e.stopPropagation();
-  const isVisible = partieDropdown.style.display === 'flex';
-  partieDropdown.style.display = isVisible ? 'none' : 'flex';
-  menuPartie.classList.toggle('active', !isVisible);
-});
-
-document.addEventListener('click', () => {
-  partieDropdown.style.display = 'none';
-  menuPartie.classList.remove('active');
-});
-
-// Bouton Nouvelle Partie du menu
-document.getElementById('item-new').onclick = () => {
-  if (confirm("Lancer une nouvelle partie ?")) newGame();
-};
-
-// Ouvrir les options
-document.getElementById('item-options').onclick = () => {
-  document.getElementById(`opt-${difficulty}`).checked = true;
-  optionsModal.style.display = 'flex';
-};
-
-// Confirmer les options
-document.getElementById('opt-ok').onclick = () => {
-  const selectedDiff = parseInt(document.querySelector('input[name="diff-opt"]:checked').value);
-  optionsModal.style.display = 'none';
-  if (selectedDiff !== difficulty) {
-    difficulty = selectedDiff;
-    newGame();
+  const isVisible = dropdownPartie.style.display === 'block';
+  closeAllMenus();
+  if (!isVisible) {
+    dropdownPartie.style.display = 'block';
+    menuPartie.classList.add('active');
   }
 };
 
-// Annuler les options
-document.getElementById('opt-cancel').onclick = () => {
-  optionsModal.style.display = 'none';
+optOptions.onclick = (e) => {
+  e.stopPropagation();
+  const isSubVisible = submenuCouleurs.style.display === 'block';
+  submenuCouleurs.style.display = isSubVisible ? 'none' : 'block';
+  optOptions.classList.toggle('active', !isSubVisible);
 };
 
-document.getElementById('menu-aide').onclick = () => {
-  alert("Spider Solitaire - Réplique fidèle Windows 7.");
+document.getElementById('opt-nouvelle').onclick = (e) => {
+  e.stopPropagation();
+  closeAllMenus();
+  if(confirm("Lancer une nouvelle partie ?")) newGame();
 };
 
+document.getElementById('menu-aide').onclick = (e) => {
+  e.stopPropagation();
+  closeAllMenus();
+  alert("Spider Solitaire - Clone Windows 7 fidèle.");
+};
+
+function closeAllMenus() {
+  dropdownPartie.style.display = 'none';
+  submenuCouleurs.style.display = 'none';
+  menuPartie.classList.remove('active');
+  optOptions.classList.remove('active');
+}
+
+document.addEventListener('click', closeAllMenus);
 window.addEventListener('resize', () => render());
 
-// Lancement automatique
 newGame();
 </script>
 </body>

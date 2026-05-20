@@ -63,41 +63,43 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   background: #ffffff;
   border: 1px solid #d9d9d9;
   box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
-  min-width: 140px;
+  min-width: 150px;
   list-style: none;
 }
 .dropdown-menu li {
   padding: 6px 12px;
   cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
-.dropdown-menu li:hover {
+.dropdown-menu li:hover, .dropdown-menu li.active {
   background-color: #e5f1fb;
-}
-.dropdown-menu li .check {
-  font-weight: bold;
-  color: #2b579a;
 }
 
 /* SUBMENU FOR COLORS */
 .submenu-container {
   position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .submenu {
   display: none;
   position: absolute;
-  top: 0;
-  left: 140px;
+  top: -1px;
+  left: 148px;
   background: #ffffff;
   border: 1px solid #d9d9d9;
   box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
   min-width: 120px;
   list-style: none;
 }
-.submenu-container:hover .submenu {
-  display: block;
+.submenu li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.submenu li .check {
+  font-weight: bold;
+  color: #2b579a;
 }
 
 /* MAIN PLAY AREA */
@@ -235,12 +237,12 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
       <div class="menu-item" id="menu-partie">Partie</div>
       <ul class="dropdown-menu" id="dropdown-partie">
         <li id="opt-nouvelle">Nouvelle partie</li>
-        <li class="submenu-container">
-          Options &nbsp;&nbsp;&gt;
-          <ul class="submenu">
-            <li onclick="setDifficulty(1)">1 couleur <span id="check-diff-1" class="check">✓</span></li>
-            <li onclick="setDifficulty(2)">2 couleurs <span id="check-diff-2" class="check"></span></li>
-            <li onclick="setDifficulty(4)">4 couleurs <span id="check-diff-4" class="check"></span></li>
+        <li class="submenu-container" id="opt-options">
+          <span>Options</span> <span>&gt;</span>
+          <ul class="submenu" id="submenu-couleurs">
+            <li onclick="setDifficulty(1, event)">1 couleur <span id="check-diff-1" class="check">✓</span></li>
+            <li onclick="setDifficulty(2, event)">2 couleurs <span id="check-diff-2" class="check"></span></li>
+            <li onclick="setDifficulty(4, event)">4 couleurs <span id="check-diff-4" class="check"></span></li>
           </ul>
         </li>
       </ul>
@@ -348,16 +350,15 @@ function newGame() {
   render();
 }
 
-function setDifficulty(diff) {
+function setDifficulty(diff, event) {
+  if (event) event.stopPropagation(); // Évite la fermeture chaotique
   difficulty = diff;
-  // Met à jour les coches visuelles du menu
+  
   document.getElementById('check-diff-1').textContent = diff === 1 ? '✓' : '';
   document.getElementById('check-diff-2').textContent = diff === 2 ? '✓' : '';
   document.getElementById('check-diff-4').textContent = diff === 4 ? '✓' : '';
   
-  // Ferme le menu et lance la partie
-  document.getElementById('dropdown-partie').style.display = 'none';
-  document.getElementById('menu-partie').classList.remove('active');
+  closeAllMenus();
   newGame();
 }
 
@@ -466,7 +467,6 @@ function isSequence(col, fromRow) {
   for (let i = fromRow; i < cards.length - 1; i++) {
     if (!cards[i].faceUp || !cards[i+1].faceUp) return false;
     if (RANK_VAL[cards[i].rank] !== RANK_VAL[cards[i+1].rank] + 1) return false;
-    // En mode multi-couleurs, les cartes à déplacer ensemble doivent être de la même couleur
     if (cards[i].suit !== cards[i+1].suit) return false;
   }
   return true;
@@ -507,13 +507,13 @@ function positionGhost(x, y) {
   ghost.style.top = (y - dragState.offsetY) + 'px';
 }
 
+// [Logique secondaire de Drag & Drop...]
 function hideGhost() {
   const ghost = document.getElementById('drag-ghost');
   ghost.style.display = 'none';
   ghost.innerHTML = '';
 }
 
-// [Reste de la logique de Drag & Drop inchangée...]
 function getColumnFromPoint(x, y) {
   const ghost = document.getElementById('drag-ghost');
   ghost.style.pointerEvents = 'none';
@@ -660,7 +660,7 @@ function onTouchEnd(e) {
     const fromCards = columns[dragState.col].slice(dragState.row);
     const col = columns[targetCol];
     if (col.length === 0 || canStack(col[col.length - 1], fromCards[0])) {
-      moveCards(dragState.col, dragState.row, targetCol);
+      moveCards(dragState.col, dragState.row, toCol);
       dragState = null;
       return;
     }
@@ -731,34 +731,53 @@ function showMsg(title, msg) {
   overlay.style.display = 'flex';
 }
 
-// ── MENU INTERACTIONS ──────────────────────────────────────────────────────
+// ── NOUVELLE LOGIQUE DES MENUS (AU CLIC) ───────────────────────────────────
 const menuPartie = document.getElementById('menu-partie');
 const dropdownPartie = document.getElementById('dropdown-partie');
+const optOptions = document.getElementById('opt-options');
+const submenuCouleurs = document.getElementById('submenu-couleurs');
 
+// Ouvrir / Fermer le menu principal
 menuPartie.onclick = (e) => {
   e.stopPropagation();
   const isVisible = dropdownPartie.style.display === 'block';
-  dropdownPartie.style.display = isVisible ? 'none' : 'block';
-  menuPartie.classList.toggle('active', !isVisible);
+  closeAllMenus();
+  if (!isVisible) {
+    dropdownPartie.style.display = 'block';
+    menuPartie.classList.add('active');
+  }
 };
 
-document.getElementById('opt-nouvelle').onclick = () => {
-  dropdownPartie.style.display = 'none';
-  menuPartie.classList.remove('active');
+// Gérer le clic sur la ligne "Options"
+optOptions.onclick = (e) => {
+  e.stopPropagation(); // Empêche de fermer le menu direct
+  const isSubVisible = submenuCouleurs.style.display === 'block';
+  submenuCouleurs.style.display = isSubVisible ? 'none' : 'block';
+  optOptions.classList.toggle('active', !isSubVisible);
+};
+
+// Nouvelle partie
+document.getElementById('opt-nouvelle').onclick = (e) => {
+  e.stopPropagation();
+  closeAllMenus();
   if(confirm("Lancer une nouvelle partie ?")) newGame();
 };
 
-document.getElementById('menu-aide').onclick = () => {
-  dropdownPartie.style.display = 'none';
-  menuPartie.classList.remove('active');
+document.getElementById('menu-aide').onclick = (e) => {
+  e.stopPropagation();
+  closeAllMenus();
   alert("Spider Solitaire - Clone Windows 7 fidèle.");
 };
 
-// Fermer les menus si on clique ailleurs sur l'écran
-document.addEventListener('click', () => {
+function closeAllMenus() {
   dropdownPartie.style.display = 'none';
+  submenuCouleurs.style.display = 'none';
   menuPartie.classList.remove('active');
-});
+  optOptions.classList.remove('active');
+}
+
+// Fermer les menus si on clique n'importe où ailleurs sur le tapis de jeu
+document.addEventListener('click', closeAllMenus);
 
 window.addEventListener('resize', () => render());
 

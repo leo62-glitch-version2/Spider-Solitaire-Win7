@@ -176,11 +176,12 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   pointer-events: none;
 }
 
-/* COMPLETED PILES AREA (BAS A GAUCHE) */
+/* COMPLETED PILES AREA (ALIGNÉ SUR LA 2ÈME PILE) */
 #completed-area {
   display: flex;
   position: relative;
   pointer-events: auto;
+  /* Aligné dynamiquement grâce au JS pour correspondre à la deuxième colonne */
 }
 .completed-card-visual {
   position: absolute;
@@ -476,7 +477,6 @@ function renderStock() {
   }
 }
 
-// Génère l'affichage visuel des paquets terminés en bas à gauche
 function renderCompleted() {
   const area = document.getElementById('completed-area');
   area.innerHTML = '';
@@ -484,6 +484,15 @@ function renderCompleted() {
 
   const cW = getCardWidth();
   const cH = Math.round(cW * (CARD_H / CARD_W));
+
+  // --- LOGIQUE DE L'ALIGNEMENT SUR LA 2ÈME COLONNE ---
+  // On calcule l'écart exact du bord gauche de l'écran par rapport à la grille du jeu
+  const mainArea = document.getElementById('main-area');
+  const paddingLeft = parseInt(window.getComputedStyle(mainArea).paddingLeft) || 30;
+  
+  // Espace occupé par la première colonne (largeur + l'espace 'gap' entre les colonnes, ici 18px)
+  const targetOffset = paddingLeft + cW + 18 - 50; // (-50 pour compenser le padding de #bottom-bar)
+  area.style.marginLeft = Math.max(0, targetOffset) + 'px';
 
   area.style.width = (cW + (completed.length - 1) * 14) + 'px';
   area.style.height = cH + 'px';
@@ -498,7 +507,6 @@ function renderCompleted() {
 
     const inner = document.createElement('div');
     inner.className = 'card-inner';
-    // On affiche un Roi (K) de la couleur du paquet complété, comme sur Windows !
     inner.style.cssText = cardBg(completed[i].suit, 'K');
     cardVisual.appendChild(inner);
 
@@ -680,6 +688,7 @@ function onCardTouchStart(e) {
   document.addEventListener('touchend', onTouchEnd);
 }
 
+// [Rest of Touch Logic...]
 function onTouchMove(e) {
   e.preventDefault();
   if (!dragState) return;
@@ -744,7 +753,6 @@ function checkCompletion(col) {
     if (RANK_VAL[cards[i].rank] !== RANK_VAL[cards[i+1].rank] + 1) return;
   }
   
-  // Sauvegarde le type de couleur pour l'affichage en bas à gauche
   completed.push({suit: topCard.suit});
   columns[col].splice(start, 13);
   if (columns[col].length > 0) columns[col][columns[col].length-1].faceUp = true;

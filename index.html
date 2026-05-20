@@ -210,24 +210,8 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   display: none;
 }
 #drag-ghost .card {
-  position: relative !important;
-  top: auto !important;
+  position: absolute !important;
 }
-
-/* OVERLAY */
-#msg-overlay {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 10000;
-}
-#msg-overlay h2 { color: #fff; font-size: 26px; margin-bottom: 12px; }
-#msg-overlay p { color: #eee; margin-bottom: 20px; font-size: 15px; }
-#msg-overlay button {
-  background: #fff; border: 1px solid #aaa; border-radius: 4px;
-  color: #000; padding: 6px 20px; font-size: 13px; cursor: pointer;
-}
-#msg-overlay button:hover { background: #e5f1fb; }
 </style>
 </head>
 <body>
@@ -351,7 +335,7 @@ function newGame() {
 }
 
 function setDifficulty(diff, event) {
-  if (event) event.stopPropagation(); // Évite la fermeture chaotique
+  if (event) event.stopPropagation();
   difficulty = diff;
   
   document.getElementById('check-diff-1').textContent = diff === 1 ? '✓' : '';
@@ -472,6 +456,7 @@ function isSequence(col, fromRow) {
   return true;
 }
 
+// Permet de poser une carte sur une autre si elle a une valeur immédiatement inférieure (ex: 6 sur 7)
 function canStack(bottom, top) {
   return RANK_VAL[bottom.rank] === RANK_VAL[top.rank] + 1;
 }
@@ -507,7 +492,6 @@ function positionGhost(x, y) {
   ghost.style.top = (y - dragState.offsetY) + 'px';
 }
 
-// [Logique secondaire de Drag & Drop...]
 function hideGhost() {
   const ghost = document.getElementById('drag-ghost');
   ghost.style.display = 'none';
@@ -557,12 +541,16 @@ function onCardMouseDown(e) {
   };
   buildGhost(ci, ri);
   positionGhost(e.clientX, e.clientY);
+  
+  // Applique l'opacité à la carte cliquée ET toutes celles qui la suivent en dessous
   const colEl = document.querySelector(`.column[data-col="${ci}"]`);
   if (colEl) {
     const cards = colEl.querySelectorAll('.card');
-    for (let i = ri; i < cards.length; i++) {
-      if (cards[i]) cards[i].style.opacity = '0.3';
-    }
+    cards.forEach(card => {
+      if (parseInt(card.dataset.row) >= ri) {
+        card.style.opacity = '0'; // Masquées complètement en arrière-plan pour ne pas faire doublon
+      }
+    });
   }
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
@@ -618,12 +606,15 @@ function onCardTouchStart(e) {
   };
   buildGhost(ci, ri);
   positionGhost(touch.clientX, touch.clientY);
+  
   const colEl = document.querySelector(`.column[data-col="${ci}"]`);
   if (colEl) {
     const cards = colEl.querySelectorAll('.card');
-    for (let i = ri; i < cards.length; i++) {
-      if (cards[i]) cards[i].style.opacity = '0.3';
-    }
+    cards.forEach(card => {
+      if (parseInt(card.dataset.row) >= ri) {
+        card.style.opacity = '0';
+      }
+    });
   }
   e.preventDefault();
   document.addEventListener('touchmove', onTouchMove, {passive: false});
@@ -660,7 +651,7 @@ function onTouchEnd(e) {
     const fromCards = columns[dragState.col].slice(dragState.row);
     const col = columns[targetCol];
     if (col.length === 0 || canStack(col[col.length - 1], fromCards[0])) {
-      moveCards(dragState.col, dragState.row, toCol);
+      moveCards(dragState.col, dragState.row, targetCol);
       dragState = null;
       return;
     }
@@ -731,13 +722,12 @@ function showMsg(title, msg) {
   overlay.style.display = 'flex';
 }
 
-// ── NOUVELLE LOGIQUE DES MENUS (AU CLIC) ───────────────────────────────────
+// ── MENUS LOGIC ────────────────────────────────────────────────────────────
 const menuPartie = document.getElementById('menu-partie');
 const dropdownPartie = document.getElementById('dropdown-partie');
 const optOptions = document.getElementById('opt-options');
 const submenuCouleurs = document.getElementById('submenu-couleurs');
 
-// Ouvrir / Fermer le menu principal
 menuPartie.onclick = (e) => {
   e.stopPropagation();
   const isVisible = dropdownPartie.style.display === 'block';
@@ -748,15 +738,13 @@ menuPartie.onclick = (e) => {
   }
 };
 
-// Gérer le clic sur la ligne "Options"
 optOptions.onclick = (e) => {
-  e.stopPropagation(); // Empêche de fermer le menu direct
+  e.stopPropagation();
   const isSubVisible = submenuCouleurs.style.display === 'block';
   submenuCouleurs.style.display = isSubVisible ? 'none' : 'block';
   optOptions.classList.toggle('active', !isSubVisible);
 };
 
-// Nouvelle partie
 document.getElementById('opt-nouvelle').onclick = (e) => {
   e.stopPropagation();
   closeAllMenus();
@@ -776,9 +764,7 @@ function closeAllMenus() {
   optOptions.classList.remove('active');
 }
 
-// Fermer les menus si on clique n'importe où ailleurs sur le tapis de jeu
 document.addEventListener('click', closeAllMenus);
-
 window.addEventListener('resize', () => render());
 
 newGame();

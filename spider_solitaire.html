@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spider Solitaire</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+body { font-family: 'Segoe UI', Arial, sans-serif; }
+#game {
+  background-image: url('bg.jpg');
+  background-size: cover;
+  background-position: center;
+  min-height: 600px;
+  padding: 10px;
+  position: relative;
+}
+#top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+#stock-area { display: flex; gap: 6px; align-items: center; }
+#completed-area { display: flex; gap: 4px; }
+#score-area {
+  background: rgba(0,0,0,0.45);
+  border-radius: 6px;
+  padding: 4px 12px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  text-align: center;
+}
+.completed-suit {
+  width: 60px; height: 84px;
+  border: 2px dashed rgba(255,255,255,0.4);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.2);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+}
+.completed-suit.has-card { border-color: gold; }
+#tableau { display: flex; gap: 6px; justify-content: center; }
+.column {
+  width: 68px;
+  min-height: 400px;
+  position: relative;
+  flex-shrink: 0;
+}
+.card-slot {
+  width: 68px; height: 84px;
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.15);
+  position: absolute;
+  top: 0;
+}
+.card {
+  width: 68px; height: 84px;
+  border-radius: 6px;
+  position: absolute;
+  cursor: pointer;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.5);
+  transition: box-shadow 0.1s, top 0.12s;
+  background-color: white;
+}
+.card:hover { box-shadow: 1px 3px 8px rgba(0,0,0,0.7); }
+.card.selected { box-shadow: 0 0 0 3px gold, 1px 3px 8px rgba(0,0,0,0.7); z-index: 100; }
+.card-inner {
+  width: 100%; height: 100%;
+  background-image: url('spritesheet.png');
+  background-repeat: no-repeat;
+  image-rendering: auto;
+}
+#stock-pile {
+  width: 68px; height: 84px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.4);
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.5);
+  transition: box-shadow 0.1s;
+  position: relative;
+}
+#stock-pile:hover { box-shadow: 0 0 0 2px gold, 1px 3px 8px rgba(0,0,0,0.7); }
+#stock-pile-inner {
+  width: 100%; height: 100%;
+  background-image: url('spritesheet.png');
+  background-repeat: no-repeat;
+}
+.empty-stock {
+  width: 68px; height: 84px;
+  border: 2px dashed rgba(255,255,255,0.3);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.2);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 28px;
+}
+.stock-count-badge {
+  position: absolute;
+  bottom: 4px; right: 6px;
+  background: rgba(0,0,0,0.6);
+  color: white; font-size: 11px;
+  border-radius: 8px; padding: 1px 5px;
+  font-weight: bold;
+}
+#msg-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 1000;
+  border-radius: 8px;
+}
+#msg-overlay h2 { color: gold; font-size: 28px; text-shadow: 0 2px 8px #000; margin-bottom: 16px; }
+#msg-overlay p { color: #fff; margin-bottom: 20px; font-size: 16px; }
+#msg-overlay button {
+  background: linear-gradient(180deg, #5aac2c 0%, #2d7a10 100%);
+  border: 2px solid #7dd45a;
+  border-radius: 8px;
+  color: white;
+  padding: 10px 28px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+}
+#msg-overlay button:hover { filter: brightness(1.15); }
+#btn-new {
+  background: linear-gradient(180deg, #4a9e1e 0%, #23650c 100%);
+  border: 1px solid #7dd45a;
+  border-radius: 6px;
+  color: white;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+#btn-new:hover { filter: brightness(1.2); }
+#diff-row { display: flex; gap: 6px; align-items: center; }
+#diff-row label { color: rgba(255,255,255,0.8); font-size: 12px; }
+#diff-select {
+  background: rgba(0,0,0,0.4); color: white; border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 4px; font-size: 12px; padding: 2px 4px;
+}
+</style>
+</head>
+<body>
+
+<div id="game">
+  <div id="top-bar">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div id="diff-row">
+        <label>Difficulté:</label>
+        <select id="diff-select">
+          <option value="1">1 couleur</option>
+          <option value="2">2 couleurs</option>
+          <option value="4">4 couleurs</option>
+        </select>
+        <button id="btn-new">Nouvelle partie</button>
+      </div>
+      <div id="score-area">Score: <span id="score-val">500</span> &nbsp;|&nbsp; Mouvements: <span id="moves-val">0</span></div>
+    </div>
+    <div id="completed-area"></div>
+    <div id="stock-area"></div>
+  </div>
+  <div id="tableau"></div>
+  <div id="msg-overlay" style="display:none"></div>
+</div>
+
+<script>
+const CARD_W = 73, CARD_H = 98;
+const DISPLAY_W = 68, DISPLAY_H = 84;
+const SCALE_X = DISPLAY_W / CARD_W, SCALE_Y = DISPLAY_H / CARD_H;
+const SUITS = ['clubs','diamonds','hearts','spades'];
+const SUIT_ROW = {clubs:0, diamonds:1, hearts:2, spades:3};
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const RANK_VAL = {A:1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,J:11,Q:12,K:13};
+const OVERLAP_FACE = 22, OVERLAP_BACK = 16;
+
+let difficulty = 1;
+let columns = [], stock = [], completed = [], score = 500, moves = 0;
+let selected = null;
+
+function cardBg(suit, rank) {
+  const col = RANKS.indexOf(rank);
+  const row = SUIT_ROW[suit];
+  const bx = -(col * CARD_W * SCALE_X);
+  const by = -(row * CARD_H * SCALE_Y);
+  return `background-position: ${bx}px ${by}px; background-size: ${CARD_W * 13 * SCALE_X}px ${CARD_H * 5 * SCALE_Y}px;`;
+}
+
+function backBg(idx) {
+  idx = idx || 0;
+  const bx = -(idx * CARD_W * SCALE_X);
+  const by = -(4 * CARD_H * SCALE_Y);
+  return `background-position: ${bx}px ${by}px; background-size: ${CARD_W * 13 * SCALE_X}px ${CARD_H * 5 * SCALE_Y}px;`;
+}
+
+function makeDeck(suits_count) {
+  let deck = [];
+  let suitsToUse;
+  if (suits_count === 1) suitsToUse = ['spades','spades','spades','spades'];
+  else if (suits_count === 2) suitsToUse = ['spades','hearts','spades','hearts'];
+  else suitsToUse = ['clubs','diamonds','hearts','spades'];
+  for (let s = 0; s < 8; s++) {
+    const suit = suitsToUse[s % suitsToUse.length];
+    for (let r = 0; r < 13; r++) deck.push({suit, rank: RANKS[r], faceUp: false});
+  }
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+function newGame() {
+  difficulty = parseInt(document.getElementById('diff-select').value);
+  score = 500; moves = 0;
+  const deck = makeDeck(difficulty);
+  columns = [];
+  for (let i = 0; i < 10; i++) columns.push([]);
+  let idx = 0;
+  for (let i = 0; i < 10; i++) {
+    const count = i < 4 ? 6 : 5;
+    for (let j = 0; j < count; j++) {
+      deck[idx].faceUp = false;
+      columns[i].push(deck[idx++]);
+    }
+    columns[i][columns[i].length - 1].faceUp = true;
+  }
+  stock = [];
+  for (let d = 0; d < 5; d++) {
+    let deal = [];
+    for (let i = 0; i < 10; i++) { deck[idx].faceUp = true; deal.push(deck[idx++]); }
+    stock.push(deal);
+  }
+  completed = [];
+  selected = null;
+  render();
+}
+
+function render() {
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('moves-val').textContent = moves;
+  renderStock();
+  renderCompleted();
+  renderTableau();
+}
+
+function renderStock() {
+  const area = document.getElementById('stock-area');
+  area.innerHTML = '';
+  if (stock.length === 0) {
+    area.innerHTML = '<div class="empty-stock">🃏</div>';
+    return;
+  }
+  const pile = document.createElement('div');
+  pile.id = 'stock-pile';
+  const inner = document.createElement('div');
+  inner.id = 'stock-pile-inner';
+  inner.className = 'card-inner';
+  inner.style.cssText = backBg(1);
+  pile.appendChild(inner);
+  const badge = document.createElement('div');
+  badge.className = 'stock-count-badge';
+  badge.textContent = stock.length;
+  pile.appendChild(badge);
+  pile.onclick = dealFromStock;
+  area.appendChild(pile);
+}
+
+function renderCompleted() {
+  const area = document.getElementById('completed-area');
+  area.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'completed-suit' + (completed[i] ? ' has-card' : '');
+    if (completed[i]) {
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+      inner.style.cssText = cardBg(completed[i].suit, 'K');
+      inner.style.width = '60px';
+      inner.style.height = '80px';
+      slot.appendChild(inner);
+    } else {
+      slot.textContent = '♠';
+    }
+    area.appendChild(slot);
+  }
+}
+
+function renderTableau() {
+  const tab = document.getElementById('tableau');
+  tab.innerHTML = '';
+  for (let ci = 0; ci < 10; ci++) {
+    const col = document.createElement('div');
+    col.className = 'column';
+    const slot = document.createElement('div');
+    slot.className = 'card-slot';
+    col.appendChild(slot);
+    const cards = columns[ci];
+    let totalH = 0;
+    for (let ri = 0; ri < cards.length; ri++) {
+      const c = cards[ri];
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      const isSelected = selected && selected.col === ci && selected.row === ri;
+      if (isSelected) cardEl.classList.add('selected');
+      cardEl.style.top = totalH + 'px';
+      cardEl.style.zIndex = ri + 1;
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+      if (c.faceUp) {
+        inner.style.cssText = cardBg(c.suit, c.rank);
+      } else {
+        inner.style.cssText = backBg(0);
+      }
+      cardEl.appendChild(inner);
+      const overlap = c.faceUp ? OVERLAP_FACE : OVERLAP_BACK;
+      if (ri < cards.length - 1) totalH += overlap;
+      else totalH += DISPLAY_H;
+      const capturedCi = ci, capturedRi = ri;
+      cardEl.onclick = (e) => { e.stopPropagation(); onCardClick(capturedCi, capturedRi); };
+      col.appendChild(cardEl);
+    }
+    col.style.height = Math.max(totalH, 100) + 'px';
+    col.onclick = () => onColumnClick(ci);
+    tab.appendChild(col);
+  }
+}
+
+function canStack(bottom, top) {
+  return RANK_VAL[bottom.rank] === RANK_VAL[top.rank] + 1;
+}
+
+function isSequence(col, fromRow) {
+  const cards = columns[col];
+  for (let i = fromRow; i < cards.length - 1; i++) {
+    if (!cards[i].faceUp || !cards[i+1].faceUp) return false;
+    if (RANK_VAL[cards[i].rank] !== RANK_VAL[cards[i+1].rank] + 1) return false;
+  }
+  return true;
+}
+
+function checkCompletion(col) {
+  const cards = columns[col];
+  if (cards.length < 13) return;
+  const last = cards[cards.length - 1];
+  if (last.rank !== 'A') return;
+  const start = cards.length - 13;
+  if (start < 0) return;
+  const topCard = cards[start];
+  if (topCard.rank !== 'K') return;
+  for (let i = start; i < cards.length - 1; i++) {
+    if (!cards[i].faceUp || !cards[i+1].faceUp) return;
+    if (cards[i].suit !== cards[i+1].suit) return;
+    if (RANK_VAL[cards[i].rank] !== RANK_VAL[cards[i+1].rank] + 1) return;
+  }
+  const suit = topCard.suit;
+  completed.push({suit});
+  columns[col].splice(start, 13);
+  if (columns[col].length > 0) columns[col][columns[col].length-1].faceUp = true;
+  score += 100;
+  render();
+  if (completed.length === 8) {
+    setTimeout(showWin, 300);
+  }
+}
+
+function onCardClick(ci, ri) {
+  const col = columns[ci];
+  const card = col[ri];
+  if (!card.faceUp) return;
+  if (!isSequence(ci, ri)) return;
+  if (selected) {
+    if (selected.col === ci && selected.row === ri) {
+      selected = null; render(); return;
+    }
+    const fromCards = columns[selected.col].slice(selected.row);
+    const target = col[col.length - 1];
+    if (ri === col.length - 1 || col.length === 0) {
+      if (col.length === 0 || canStack(target, fromCards[0])) {
+        moveCards(selected.col, selected.row, ci);
+        return;
+      }
+    }
+    selected = {col: ci, row: ri};
+    render();
+  } else {
+    selected = {col: ci, row: ri};
+    render();
+  }
+}
+
+function onColumnClick(ci) {
+  if (!selected) return;
+  const col = columns[ci];
+  const fromCards = columns[selected.col].slice(selected.row);
+  if (col.length === 0) {
+    moveCards(selected.col, selected.row, ci);
+  } else {
+    const target = col[col.length - 1];
+    if (canStack(target, fromCards[0])) {
+      moveCards(selected.col, selected.row, ci);
+    } else {
+      selected = null; render();
+    }
+  }
+}
+
+function moveCards(fromCol, fromRow, toCol) {
+  const cards = columns[fromCol].splice(fromRow);
+  columns[toCol].push(...cards);
+  if (columns[fromCol].length > 0) columns[fromCol][columns[fromCol].length-1].faceUp = true;
+  selected = null;
+  moves++;
+  score = Math.max(0, score - 1);
+  render();
+  checkCompletion(toCol);
+}
+
+function dealFromStock() {
+  if (stock.length === 0) return;
+  for (let i = 0; i < 10; i++) {
+    if (columns[i].length === 0) {
+      showMsg('Impossible de distribuer', 'Toutes les colonnes doivent contenir au moins une carte avant de distribuer.');
+      return;
+    }
+  }
+  const deal = stock.pop();
+  for (let i = 0; i < 10; i++) {
+    deal[i].faceUp = true;
+    columns[i].push(deal[i]);
+  }
+  moves++;
+  score = Math.max(0, score - 1);
+  render();
+  for (let i = 0; i < 10; i++) checkCompletion(i);
+}
+
+function showWin() {
+  const overlay = document.getElementById('msg-overlay');
+  overlay.innerHTML = `<h2>🎉 Félicitations !</h2><p>Vous avez gagné avec un score de <strong>${score}</strong> !</p><button onclick="document.getElementById('msg-overlay').style.display='none';newGame()">Nouvelle partie</button>`;
+  overlay.style.display = 'flex';
+}
+
+function showMsg(title, msg) {
+  const overlay = document.getElementById('msg-overlay');
+  overlay.innerHTML = `<h2>${title}</h2><p>${msg}</p><button onclick="document.getElementById('msg-overlay').style.display='none'">OK</button>`;
+  overlay.style.display = 'flex';
+}
+
+document.getElementById('btn-new').onclick = newGame;
+newGame();
+</script>
+</body>
+</html>

@@ -455,7 +455,6 @@ function renderStock() {
   const sW = getCardWidth();
   const sH = Math.round(sW * (CARD_H / CARD_W));
   
-  // Largeur totale dépendante du nombre de paquets restants
   area.style.width = (sW + (stock.length - 1) * 14) + 'px';
   area.style.height = sH + 'px';
 
@@ -465,8 +464,7 @@ function renderStock() {
     cardVisual.style.width = sW + 'px';
     cardVisual.style.height = sH + 'px';
     
-    // MODIFICATION ICI : On inverse le décalage et l'index de rendu
-    // Le paquet s'étale de droite à gauche visuellement, mettant le paquet actif au-dessus à droite
+    // Aligne l'empilement vers la droite avec un index croissant (style fidèle à Windows 7)
     cardVisual.style.left = (i * 14) + 'px';
     cardVisual.style.zIndex = i;
 
@@ -475,7 +473,7 @@ function renderStock() {
     inner.style.cssText = backBg(0);
     cardVisual.appendChild(inner);
 
-    // C'est maintenant le paquet d'index maximum (le plus à droite) qui est actif et cliquable
+    // Seul le dernier paquet (le plus à droite) reçoit l'action de clic
     if (i === stock.length - 1) {
       cardVisual.onclick = dealFromStock;
     }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -411,15 +411,15 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 <div id="game">
   <div id="menu-bar">
     <div class="menu-item-container">
-      <div class="menu-item" id="menu-partie">Partie</div>
+      <div class="menu-item" id="menu-partie">Game</div>
       <ul class="dropdown-menu" id="dropdown-partie">
-        <li id="opt-nouvelle">Nouvelle partie</li>
+        <li id="opt-nouvelle">New Game</li>
         <li class="submenu-container" id="opt-options">
           <span>Options</span> <span>&gt;</span>
           <ul class="submenu" id="submenu-couleurs">
-            <li onclick="setDifficulty(1, event)">1 couleur <span id="check-diff-1" class="check">✓</span></li>
-            <li onclick="setDifficulty(2, event)">2 couleurs <span id="check-diff-2" class="check"></span></li>
-            <li onclick="setDifficulty(4, event)">4 couleurs <span id="check-diff-4" class="check"></span></li>
+            <li onclick="setDifficulty(1, event)">1 suit <span id="check-diff-1" class="check">✓</span></li>
+            <li onclick="setDifficulty(2, event)">2 suits <span id="check-diff-2" class="check"></span></li>
+            <li onclick="setDifficulty(4, event)">4 suits <span id="check-diff-4" class="check"></span></li>
           </ul>
         </li>
       </ul>
@@ -437,8 +437,8 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
     <div style="display: flex; align-items: flex-end; gap: 65px;">
       <div id="stock-area"></div>
       <div id="status-area">
-        <div>Score : <span id="score-val">500</span></div>
-        <div>Coups : <span id="moves-val">0</span></div>
+        <div>Score: <span id="score-val">500</span></div>
+        <div>Moves: <span id="moves-val">0</span></div>
       </div>
     </div>
   </div>
@@ -515,7 +515,7 @@ function recordWin() {
   s.played = (s.played||0) + 1;
   s.won = (s.won||0) + 1;
   if (!s.bestScore || score > s.bestScore) s.bestScore = score;
-  s.lastDate = new Date().toLocaleDateString('fr-FR');
+  s.lastDate = new Date().toLocaleDateString('en-US');
   saveStats(s);
 }
 function recordNewGame() {
@@ -1246,7 +1246,7 @@ function startFireworks() {
 function showReplayDialog() {
   const st = getStats();
   const winRate = st.played > 0 ? Math.round((st.won / st.played) * 100) : 0;
-  const today = new Date().toLocaleDateString('fr-FR');
+  const today = new Date().toLocaleDateString('en-US');
 
   const old = document.getElementById('win-dialog');
   if (old) old.remove();
@@ -1255,30 +1255,30 @@ function showReplayDialog() {
   dlg.id = 'win-dialog';
   dlg.innerHTML = `
     <div class="wd-titlebar">
-      <span>Partie gagnée</span>
+      <span>Game Won</span>
       <button class="wd-close" onclick="document.getElementById('win-dialog').remove()">✕</button>
     </div>
     <div class="wd-body">
-      <div class="wd-congrats">Félicitations, vous avez gagné !</div>
+      <div class="wd-congrats">Congratulations, you won!</div>
       <div class="wd-box">
         <div class="wd-box-title">Score</div>
         <div class="wd-box-row">
-          <span>Score : <strong>${score}</strong></span>
-          <span>Déplacements : <strong>${moves}</strong></span>
+          <span>Score: <strong>${score}</strong></span>
+          <span>Moves: <strong>${moves}</strong></span>
         </div>
       </div>
       <div class="wd-stats">
-        <div class="wd-stat-row"><span>Score maximal :</span><span>${st.bestScore}</span></div>
-        <div class="wd-stat-row"><span>Date :</span><span>${today}</span></div>
-        <div class="wd-stat-row"><span>Parties jouées :</span><span>${st.played}</span></div>
+        <div class="wd-stat-row"><span>Best score:</span><span>${st.bestScore}</span></div>
+        <div class="wd-stat-row"><span>Date:</span><span>${today}</span></div>
+        <div class="wd-stat-row"><span>Games played:</span><span>${st.played}</span></div>
         <div class="wd-stat-row"></div>
-        <div class="wd-stat-row"><span>Parties gagnées :</span><span>${st.won}</span></div>
-        <div class="wd-stat-row"><span>Victoires :</span><span>${winRate}%</span></div>
+        <div class="wd-stat-row"><span>Games won:</span><span>${st.won}</span></div>
+        <div class="wd-stat-row"><span>Win rate:</span><span>${winRate}%</span></div>
       </div>
-      <div class="wd-link"><a href="#" onclick="return false;">Obtenir plus de parties en ligne</a></div>
+      <div class="wd-link"><a href="#" onclick="return false;">Get more games online</a></div>
       <div class="wd-buttons">
-        <button class="wd-btn" onclick="document.getElementById('win-dialog').remove();stopFireworksSound();newGame()">Rejouer</button>
-        <button class="wd-btn wd-btn-primary" onclick="document.getElementById('win-dialog').remove();stopFireworksSound()">Quitter</button>
+        <button class="wd-btn" onclick="document.getElementById('win-dialog').remove();stopFireworksSound();newGame()">Play Again</button>
+        <button class="wd-btn wd-btn-primary" onclick="document.getElementById('win-dialog').remove();stopFireworksSound()">Quit</button>
       </div>
     </div>
   `;
@@ -1327,13 +1327,13 @@ optOptions.onclick = (e) => {
 document.getElementById('opt-nouvelle').onclick = (e) => {
   e.stopPropagation();
   closeAllMenus();
-  if(confirm("Lancer une nouvelle partie ?")) newGame();
+  newGame();
 };
 
 document.getElementById('menu-aide').onclick = (e) => {
   e.stopPropagation();
   closeAllMenus();
-  alert("Spider Solitaire - Clone Windows 7 fidèle.");
+  alert("Spider Solitaire - Windows 7 faithful clone.");
 };
 
 function closeAllMenus() {

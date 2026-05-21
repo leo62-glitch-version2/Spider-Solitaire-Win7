@@ -263,6 +263,114 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   z-index: 9999;
   pointer-events: none;
 }
+
+/* FENÊTRE VICTOIRE STYLE WINDOWS 7 */
+#win-dialog {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 310px;
+  background: #f0f0f0;
+  border: 1px solid #999;
+  border-top: 1px solid #bbb;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.35);
+  z-index: 20000;
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  font-size: 13px;
+  color: #000;
+}
+.wd-titlebar {
+  background: linear-gradient(to bottom, #c8daf0 0%, #a8c4e4 40%, #90b8e0 100%);
+  padding: 6px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #222;
+  border-bottom: 1px solid #88aacc;
+}
+.wd-close {
+  background: linear-gradient(to bottom, #e8a0a0, #c04040);
+  border: 1px solid #804040;
+  color: white;
+  font-size: 10px;
+  width: 20px; height: 18px;
+  cursor: pointer;
+  border-radius: 2px;
+  line-height: 1;
+  padding: 0;
+}
+.wd-close:hover { background: linear-gradient(to bottom, #ff9090, #dd2020); }
+.wd-body { padding: 14px 16px 12px; }
+.wd-congrats {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.wd-box {
+  border: 1px solid #bbb;
+  background: #fff;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+.wd-box-title {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 6px;
+}
+.wd-box-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.wd-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.wd-stat-row {
+  display: flex;
+  justify-content: space-between;
+}
+.wd-stat-row span:first-child { color: #333; }
+.wd-stat-row span:last-child { font-weight: bold; }
+.wd-link {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.wd-link a { color: #0066cc; text-decoration: underline; }
+.wd-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wd-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 12px;
+  background: linear-gradient(to bottom, #f8f8f8, #ddd);
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  cursor: pointer;
+  color: #000;
+}
+.wd-btn:hover { background: linear-gradient(to bottom, #e8f0ff, #c8d8f0); border-color: #88aacc; }
+.wd-btn-primary { font-weight: bold; }
+
+/* MENU SÉPARATEUR */
+.menu-separator {
+  height: 1px;
+  background: #ccc;
+  margin: 3px 6px;
+  pointer-events: none;
+}
+
+/* BADGE DÉBUG */
+#menu-debug { color: #cc6600; font-style: italic; }
 </style>
 </head>
 <body>
@@ -280,6 +388,18 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
             <li onclick="setDifficulty(4, event)">4 couleurs <span id="check-diff-4" class="check"></span></li>
           </ul>
         </li>
+      </ul>
+    </div>
+    <div class="menu-item-container">
+      <div class="menu-item" id="menu-debug">Débug</div>
+      <ul class="dropdown-menu" id="dropdown-debug">
+        <li id="dbg-win">🏆 Écran de fin (victoire)</li>
+        <li id="dbg-fireworks">🎆 Feux d'artifice seuls</li>
+        <li id="dbg-win-instant">⚡ Gagner instantanément</li>
+        <li class="menu-separator"></li>
+        <li id="dbg-reset-stats">🗑️ Réinitialiser les stats</li>
+        <li id="dbg-add-score">➕ +500 au score</li>
+        <li id="dbg-empty-stock">📦 Vider le stock</li>
       </ul>
     </div>
     <div class="menu-item" id="menu-aide">?</div>
@@ -323,6 +443,31 @@ let difficulty = 1;
 let columns = [], stock = [], completed = [], score = 500, moves = 0;
 let dragState = null;
 
+// Stats persistantes
+function loadStats() {
+  try { return JSON.parse(localStorage.getItem('spider_stats') || '{}'); } catch(e) { return {}; }
+}
+function saveStats(s) {
+  try { localStorage.setItem('spider_stats', JSON.stringify(s)); } catch(e) {}
+}
+function getStats() {
+  const s = loadStats();
+  return { played: s.played||0, won: s.won||0, bestScore: s.bestScore||0, lastDate: s.lastDate||'' };
+}
+function recordWin() {
+  const s = loadStats();
+  s.played = (s.played||0) + 1;
+  s.won = (s.won||0) + 1;
+  if (!s.bestScore || score > s.bestScore) s.bestScore = score;
+  s.lastDate = new Date().toLocaleDateString('fr-FR');
+  saveStats(s);
+}
+function recordNewGame() {
+  const s = loadStats();
+  s.played = (s.played||0) + 1;
+  saveStats(s);
+}
+
 function updateScale() {
   SCALE_X = DISPLAY_W / CARD_W;
   SCALE_Y = DISPLAY_H / CARD_H;
@@ -364,6 +509,7 @@ function makeDeck(suits_count) {
 }
 
 function newGame() {
+  recordNewGame();
   score = 500; moves = 0;
   const deck = makeDeck(difficulty);
   columns = [];
@@ -800,6 +946,7 @@ function dealFromStock() {
 }
 
 function showWin() {
+  recordWin();
   startFireworks();
 }
 
@@ -964,13 +1111,46 @@ function startFireworks() {
 }
 
 function showReplayDialog() {
-  const overlay = document.getElementById('msg-overlay');
-  overlay.innerHTML = `
-    <h2>🎉 Félicitations !</h2>
-    <p>Partie gagnée avec un score de <strong>${score}</strong> !</p>
-    <button onclick="document.getElementById('msg-overlay').style.display='none';newGame()">Nouvelle partie</button>
+  const st = getStats();
+  const winRate = st.played > 0 ? Math.round((st.won / st.played) * 100) : 0;
+  const today = new Date().toLocaleDateString('fr-FR');
+
+  // Supprimer ancien dialog si existant
+  const old = document.getElementById('win-dialog');
+  if (old) old.remove();
+
+  const dlg = document.createElement('div');
+  dlg.id = 'win-dialog';
+  dlg.innerHTML = `
+    <div class="wd-titlebar">
+      <span>Partie gagnée</span>
+      <button class="wd-close" onclick="document.getElementById('win-dialog').remove()">✕</button>
+    </div>
+    <div class="wd-body">
+      <div class="wd-congrats">Félicitations, vous avez gagné !</div>
+      <div class="wd-box">
+        <div class="wd-box-title">Score</div>
+        <div class="wd-box-row">
+          <span>Score : <strong>${score}</strong></span>
+          <span>Déplacements : <strong>${moves}</strong></span>
+        </div>
+      </div>
+      <div class="wd-stats">
+        <div class="wd-stat-row"><span>Score maximal :</span><span>${st.bestScore}</span></div>
+        <div class="wd-stat-row"><span>Date :</span><span>${today}</span></div>
+        <div class="wd-stat-row"><span>Parties jouées :</span><span>${st.played}</span></div>
+        <div class="wd-stat-row"></div>
+        <div class="wd-stat-row"><span>Parties gagnées :</span><span>${st.won}</span></div>
+        <div class="wd-stat-row"><span>Victoires :</span><span>${winRate}%</span></div>
+      </div>
+      <div class="wd-link"><a href="#" onclick="return false;">Obtenir plus de parties en ligne</a></div>
+      <div class="wd-buttons">
+        <button class="wd-btn" onclick="document.getElementById('win-dialog').remove();newGame()">Rejouer</button>
+        <button class="wd-btn wd-btn-primary" onclick="document.getElementById('win-dialog').remove()">Quitter</button>
+      </div>
+    </div>
   `;
-  overlay.style.display = 'flex';
+  document.body.appendChild(dlg);
 }
 function showMsg(title, msg) {
   const overlay = document.getElementById('msg-overlay');
@@ -1018,7 +1198,66 @@ function closeAllMenus() {
   submenuCouleurs.style.display = 'none';
   menuPartie.classList.remove('active');
   optOptions.classList.remove('active');
+  document.getElementById('dropdown-debug').style.display = 'none';
+  document.getElementById('menu-debug').classList.remove('active');
 }
+
+// ── DEBUG MENU ──────────────────────────────────────────────────────────────
+const menuDebug = document.getElementById('menu-debug');
+const dropdownDebug = document.getElementById('dropdown-debug');
+
+menuDebug.onclick = (e) => {
+  e.stopPropagation();
+  const isVisible = dropdownDebug.style.display === 'block';
+  closeAllMenus();
+  if (!isVisible) {
+    dropdownDebug.style.display = 'block';
+    menuDebug.classList.add('active');
+  }
+};
+
+document.getElementById('dbg-win').onclick = (e) => {
+  e.stopPropagation(); closeAllMenus();
+  // Montre juste la fenêtre de fin sans feux d'artifice
+  showReplayDialog();
+};
+
+document.getElementById('dbg-fireworks').onclick = (e) => {
+  e.stopPropagation(); closeAllMenus();
+  startFireworks();
+};
+
+document.getElementById('dbg-win-instant').onclick = (e) => {
+  e.stopPropagation(); closeAllMenus();
+  // Force la victoire : vide toutes les colonnes et remplit les 8 emplacements
+  columns = columns.map(() => []);
+  completed = [{suit:'spades'},{suit:'spades'},{suit:'hearts'},{suit:'hearts'},
+               {suit:'clubs'},{suit:'clubs'},{suit:'diamonds'},{suit:'diamonds'}];
+  stock = [];
+  score = 1200; moves = moves;
+  render();
+  setTimeout(showWin, 300);
+};
+
+document.getElementById('dbg-reset-stats').onclick = (e) => {
+  e.stopPropagation(); closeAllMenus();
+  if (confirm('Réinitialiser toutes les statistiques ?')) {
+    localStorage.removeItem('spider_stats');
+    alert('Stats réinitialisées.');
+  }
+};
+
+document.getElementById('dbg-add-score').onclick = (e) => {
+  e.stopPropagation(); closeAllMenus();
+  score += 500;
+  render();
+};
+
+document.getElementById('dbg-empty-stock').onclick = (e) => {
+  e.stopPropagation(); closeAllMenus();
+  stock = [];
+  render();
+};
 
 document.addEventListener('click', closeAllMenus);
 window.addEventListener('resize', () => render());

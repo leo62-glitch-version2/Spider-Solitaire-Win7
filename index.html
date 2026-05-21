@@ -230,20 +230,56 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   position: absolute !important;
 }
 
-/* OVERLAY POUR MESSAGES */
-#msg-overlay {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 10000;
+/* OVERLAY POUR MESSAGES (conservé) */
+#msg-overlay { display: none; }
+
+/* TOAST STYLE WINDOWS 7 — bas gauche */
+#toast-msg {
+  position: fixed;
+  bottom: 28px;
+  left: 18px;
+  width: 290px;
+  background: linear-gradient(to bottom, #f5f5f0 0%, #e8e8e0 100%);
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  box-shadow: 2px 4px 14px rgba(0,0,0,0.32);
+  z-index: 15000;
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  padding: 14px 32px 14px 16px;
+  display: none;
+  animation: toastIn 0.15s ease;
 }
-#msg-overlay h2 { color: #fff; font-size: 26px; margin-bottom: 12px; }
-#msg-overlay p { color: #eee; margin-bottom: 20px; font-size: 15px; }
-#msg-overlay button {
-  background: #fff; border: 1px solid #aaa; border-radius: 4px;
-  color: #000; padding: 6px 20px; font-size: 13px; cursor: pointer;
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-#msg-overlay button:hover { background: #e5f1fb; }
+#toast-msg .toast-close {
+  position: absolute;
+  top: 6px; right: 7px;
+  width: 16px; height: 16px;
+  border: 1px solid #aaa;
+  background: linear-gradient(to bottom, #f0f0f0, #d8d8d8);
+  border-radius: 2px;
+  font-size: 9px;
+  line-height: 14px;
+  text-align: center;
+  cursor: pointer;
+  color: #444;
+  user-select: none;
+}
+#toast-msg .toast-close:hover { background: linear-gradient(to bottom, #ffd0d0, #e08080); color: #fff; border-color: #c04040; }
+#toast-msg .toast-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #2255aa;
+  margin-bottom: 7px;
+  line-height: 1.2;
+}
+#toast-msg .toast-body {
+  font-size: 12px;
+  color: #222;
+  line-height: 1.5;
+}
 
 /* WIN ANIMATION */
 #win-canvas {
@@ -423,6 +459,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 
   <div id="msg-overlay" style="display:none"></div>
 </div>
+<div id="toast-msg"><div class="toast-close" onclick="hideToast()">✕</div><div class="toast-title" id="toast-title"></div><div class="toast-body" id="toast-body"></div></div>
 
 <div id="drag-ghost"></div>
 
@@ -1222,10 +1259,21 @@ function showReplayDialog() {
   `;
   document.body.appendChild(dlg);
 }
+let toastTimer = null;
 function showMsg(title, msg) {
-  const overlay = document.getElementById('msg-overlay');
-  overlay.innerHTML = `<h2>${title}</h2><p>${msg}</p><button onclick="document.getElementById('msg-overlay').style.display='none'">OK</button>`;
-  overlay.style.display = 'flex';
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-body').textContent = msg;
+  const t = document.getElementById('toast-msg');
+  t.style.display = 'block';
+  t.style.animation = 'none';
+  void t.offsetWidth; // reflow
+  t.style.animation = 'toastIn 0.15s ease';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 5000);
+}
+function hideToast() {
+  document.getElementById('toast-msg').style.display = 'none';
+  if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
 }
 
 // ── MENUS LOGIC ────────────────────────────────────────────────────────────

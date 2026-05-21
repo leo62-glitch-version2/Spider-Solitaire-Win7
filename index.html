@@ -172,7 +172,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   padding: 0 50px 30px 50px;
   display: flex;
   align-items: flex-end;
-  justify-content: flex-end; /* On force tout à rester calé à droite */
+  justify-content: flex-end;
   pointer-events: none;
 }
 
@@ -180,7 +180,7 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 #completed-area {
   display: flex;
   position: absolute;
-  bottom: 30px; /* Aligné sur le bas comme la pioche */
+  bottom: 30px;
   pointer-events: auto;
   z-index: 10;
 }
@@ -455,6 +455,7 @@ function renderStock() {
   const sW = getCardWidth();
   const sH = Math.round(sW * (CARD_H / CARD_W));
   
+  // Largeur totale dépendante du nombre de paquets restants
   area.style.width = (sW + (stock.length - 1) * 14) + 'px';
   area.style.height = sH + 'px';
 
@@ -463,6 +464,9 @@ function renderStock() {
     cardVisual.className = 'stock-card-visual';
     cardVisual.style.width = sW + 'px';
     cardVisual.style.height = sH + 'px';
+    
+    // MODIFICATION ICI : On inverse le décalage et l'index de rendu
+    // Le paquet s'étale de droite à gauche visuellement, mettant le paquet actif au-dessus à droite
     cardVisual.style.left = (i * 14) + 'px';
     cardVisual.style.zIndex = i;
 
@@ -471,6 +475,7 @@ function renderStock() {
     inner.style.cssText = backBg(0);
     cardVisual.appendChild(inner);
 
+    // C'est maintenant le paquet d'index maximum (le plus à droite) qui est actif et cliquable
     if (i === stock.length - 1) {
       cardVisual.onclick = dealFromStock;
     }
@@ -486,11 +491,9 @@ function renderCompleted() {
   const cW = getCardWidth();
   const cH = Math.round(cW * (CARD_H / CARD_W));
 
-  // --- ALIGNEMENT PARFAIT ET SÉCURISÉ ---
   const cols = document.querySelectorAll('#tableau .column');
   if (cols && cols.length > 1) {
     const secondColRect = cols[1].getBoundingClientRect();
-    // Positionnement absolu direct par rapport au bord gauche du viewport global
     area.style.left = secondColRect.left + 'px';
   }
 

@@ -800,103 +800,165 @@ function dealFromStock() {
 }
 
 function showWin() {
-  startWinAnimation();
+  startFireworks();
 }
 
-function startWinAnimation() {
-  // Canvas de fond cliquable
-  const canvas = document.createElement('div');
+function startFireworks() {
+  const canvas = document.createElement('canvas');
   canvas.id = 'win-canvas';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;cursor:pointer;';
   document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
 
-  const suits = ['clubs','diamonds','hearts','spades'];
-  const ranks = ['A','K','Q','J','10'];
-  const cW = Math.round(DISPLAY_W * 0.9);
-  const cH = Math.round(cW * (CARD_H / CARD_W));
-  const gravity = 0.4;
-  const bounce = 0.72;
-  const cards = [];
-  let animId = null;
+  const particles = [];
+  const rockets = [];
+  let animId;
   let clickable = false;
+  setTimeout(() => { clickable = true; }, 1500);
 
-  // Créer ~12 cartes qui tombent depuis le haut
-  const count = 12;
-  for (let i = 0; i < count; i++) {
-    const suit = suits[i % suits.length];
-    const rank = ranks[i % ranks.length];
+  // Palette façon Windows 7 : blanc, bleu ciel, vert lime, jaune, cyan
+  const palettes = [
+    ['#ffffff','#aee8ff','#7dd4f8','#cceeff'],
+    ['#aaff44','#ccff88','#eeffbb','#ffffff'],
+    ['#ffee44','#ffcc00','#ffe599','#ffffff'],
+    ['#44ddff','#88eeff','#ccffff','#ffffff'],
+    ['#ff88cc','#ffbbdd','#ffffff','#ffeeee'],
+  ];
 
-    const el = document.createElement('div');
-    el.className = 'win-card';
-    el.style.width = cW + 'px';
-    el.style.height = cH + 'px';
+  function randomPalette() { return palettes[Math.floor(Math.random()*palettes.length)]; }
 
-    const inner = document.createElement('div');
-    inner.className = 'card-inner';
-    inner.style.cssText = cardBg(suit, rank);
-    el.appendChild(inner);
-    document.body.appendChild(el);
-
-    const x = Math.random() * (window.innerWidth - cW);
-    const y = -cH - Math.random() * window.innerHeight * 0.8;
-    const vx = (Math.random() - 0.5) * 6;
-    const vy = 2 + Math.random() * 4;
-
-    cards.push({ el, x, y, vx, vy, grounded: false });
-  }
-
-  // Lancer les cartes en décalé
-  let launched = 0;
-  function launchNext() {
-    if (launched < cards.length) {
-      launched++;
-      setTimeout(launchNext, 180 + Math.random() * 120);
-    } else {
-      // Toutes lancées, activer le clic après 1.5s
-      setTimeout(() => { clickable = true; }, 1500);
+  function explode(x, y, palette) {
+    const count = 90 + Math.floor(Math.random()*60);
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI*2/count)*i + (Math.random()-0.5)*0.3;
+      const speed = 2 + Math.random()*5;
+      // Quelques traînées longues (streaks) comme Windows 7
+      const isStreak = Math.random() < 0.25;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle)*speed,
+        vy: Math.sin(angle)*speed,
+        alpha: 1,
+        size: isStreak ? 1.5 + Math.random()*1.5 : 2 + Math.random()*2,
+        color: palette[Math.floor(Math.random()*palette.length)],
+        streak: isStreak,
+        trail: isStreak ? [{x,y}] : null,
+        gravity: 0.06 + Math.random()*0.04,
+        fade: 0.012 + Math.random()*0.01,
+      });
+    }
+    // Étoiles scintillantes au centre
+    for (let i = 0; i < 12; i++) {
+      particles.push({
+        x: x + (Math.random()-0.5)*20,
+        y: y + (Math.random()-0.5)*20,
+        vx: (Math.random()-0.5)*1.5,
+        vy: (Math.random()-0.5)*1.5 - 1,
+        alpha: 1, size: 3+Math.random()*3,
+        color: '#ffffff', streak: false, trail: null,
+        gravity: 0.05, fade: 0.018, star: true,
+      });
     }
   }
-  launchNext();
 
-  const floor = window.innerHeight - cH;
+  function launchRocket() {
+    const x = window.innerWidth * (0.15 + Math.random()*0.7);
+    const targetY = window.innerHeight * (0.1 + Math.random()*0.4);
+    const palette = randomPalette();
+    rockets.push({ x, y: window.innerHeight + 10, vy: -(window.innerHeight - targetY) / 35, targetY, palette, trail: [] });
+    setTimeout(launchRocket, 600 + Math.random()*900);
+  }
+  launchRocket();
+  setTimeout(launchRocket, 300);
 
-  function animate() {
-    animId = requestAnimationFrame(animate);
-    for (let i = 0; i < launched; i++) {
-      const c = cards[i];
-      c.vy += gravity;
-      c.x += c.vx;
-      c.y += c.vy;
+  function draw() {
+    animId = requestAnimationFrame(draw);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Rebond sur le sol
-      if (c.y >= floor) {
-        c.y = floor;
-        c.vy = -Math.abs(c.vy) * bounce;
-        if (Math.abs(c.vy) < 1.5) {
-          c.vy = 0;
-          c.grounded = true;
+    // Rockets
+    for (let i = rockets.length-1; i >= 0; i--) {
+      const r = rockets[i];
+      r.y += r.vy;
+      r.trail.push({x:r.x, y:r.y});
+      if (r.trail.length > 18) r.trail.shift();
+
+      // Dessiner traînée fusée
+      for (let t = 0; t < r.trail.length; t++) {
+        const a = (t / r.trail.length) * 0.7;
+        ctx.beginPath();
+        ctx.arc(r.trail[t].x, r.trail[t].y, 2*(t/r.trail.length), 0, Math.PI*2);
+        ctx.fillStyle = `rgba(200,220,255,${a})`;
+        ctx.fill();
+      }
+      // Tête fusée
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, 3, 0, Math.PI*2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+
+      if (r.y <= r.targetY) {
+        explode(r.x, r.y, r.palette);
+        rockets.splice(i, 1);
+      }
+    }
+
+    // Particles
+    for (let i = particles.length-1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.vx *= 0.98;
+      p.alpha -= p.fade;
+      if (p.alpha <= 0) { particles.splice(i,1); continue; }
+
+      if (p.streak && p.trail) {
+        p.trail.push({x:p.x, y:p.y});
+        if (p.trail.length > 8) p.trail.shift();
+        // Ligne traînée
+        if (p.trail.length > 1) {
+          ctx.beginPath();
+          ctx.moveTo(p.trail[0].x, p.trail[0].y);
+          for (let t=1; t<p.trail.length; t++) ctx.lineTo(p.trail[t].x, p.trail[t].y);
+          ctx.strokeStyle = p.color.replace(')',`,${p.alpha*0.5})`).replace('rgb','rgba').replace('#', 'rgba(').replace(/^rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/, (_,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)}`);
+          // simplified: just use globalAlpha
+          ctx.globalAlpha = p.alpha * 0.4;
+          ctx.lineWidth = p.size * 0.6;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
         }
-        // Friction latérale
-        c.vx *= 0.85;
       }
 
-      // Rebond sur les bords
-      if (c.x < 0) { c.x = 0; c.vx = Math.abs(c.vx) * 0.7; }
-      if (c.x > window.innerWidth - cW) { c.x = window.innerWidth - cW; c.vx = -Math.abs(c.vx) * 0.7; }
-
-      c.el.style.left = c.x + 'px';
-      c.el.style.top = c.y + 'px';
+      if (p.star) {
+        // Scintillement : petite étoile à 4 branches
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        const s = p.size;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y - s*2); ctx.lineTo(p.x + s*0.4, p.y - s*0.4);
+        ctx.lineTo(p.x + s*2, p.y); ctx.lineTo(p.x + s*0.4, p.y + s*0.4);
+        ctx.lineTo(p.x, p.y + s*2); ctx.lineTo(p.x - s*0.4, p.y + s*0.4);
+        ctx.lineTo(p.x - s*2, p.y); ctx.lineTo(p.x - s*0.4, p.y - s*0.4);
+        ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     }
   }
-  animate();
+  draw();
 
-  // Clic n'importe où → proposer de rejouer
   canvas.addEventListener('click', () => {
     if (!clickable) return;
     cancelAnimationFrame(animId);
-    // Nettoyer
-    cards.forEach(c => c.el.remove());
     canvas.remove();
-    // Afficher dialog rejouer
     showReplayDialog();
   });
 }

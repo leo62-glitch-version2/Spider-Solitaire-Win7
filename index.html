@@ -464,6 +464,39 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
 <div id="drag-ghost"></div>
 
 <script>
+// ── SOUND SYSTEM ───────────────────────────────────────────────────────────
+const sounds = {
+  pick:      new Audio('sound/card_1.mp3'),
+  drop:      new Audio('sound/card_2.mp3'),
+  place:     new Audio('sound/card_3.mp3'),
+  warning:   new Audio('sound/warning.mp3'),
+  complete:  new Audio('sound/win_sound.mp3'),
+  fireworks: new Audio('sound/fireworks_sound.mp3'),
+};
+sounds.fireworks.loop = true;
+
+function playSound(name) {
+  const s = sounds[name];
+  if (!s) return;
+  s.currentTime = 0;
+  s.play().catch(() => {});
+}
+
+let fireworksAudioPlaying = false;
+
+function startFireworksSound() {
+  if (fireworksAudioPlaying) return;
+  fireworksAudioPlaying = true;
+  sounds.fireworks.currentTime = 0;
+  sounds.fireworks.play().catch(() => {});
+}
+
+function stopFireworksSound() {
+  fireworksAudioPlaying = false;
+  sounds.fireworks.pause();
+  sounds.fireworks.currentTime = 0;
+}
+
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const CARD_W = 73.15, CARD_H = 97.6;
 let DISPLAY_W = 105, DISPLAY_H = 140;
@@ -813,6 +846,7 @@ function onCardMouseDown(e) {
   };
   buildGhost(ci, ri);
   positionGhost(e.clientX, e.clientY);
+  playSound('pick');
   
   const colEl = document.querySelector(`.column[data-col="${ci}"]`);
   if (colEl) {
@@ -854,10 +888,15 @@ function onMouseUp(e) {
     const fromCards = columns[dragState.col].slice(dragState.row);
     const col = columns[targetCol];
     if (col.length === 0 || canStack(col[col.length - 1], fromCards[0])) {
+      playSound('place');
       moveCards(dragState.col, dragState.row, targetCol);
       dragState = null;
       return;
+    } else {
+      playSound('warning');
     }
+  } else {
+    playSound('drop');
   }
   dragState = null;
   render();
@@ -878,6 +917,7 @@ function onCardTouchStart(e) {
   };
   buildGhost(ci, ri);
   positionGhost(touch.clientX, touch.clientY);
+  playSound('pick');
   
   const colEl = document.querySelector(`.column[data-col="${ci}"]`);
   if (colEl) {
@@ -923,10 +963,15 @@ function onTouchEnd(e) {
     const fromCards = columns[dragState.col].slice(dragState.row);
     const col = columns[targetCol];
     if (col.length === 0 || canStack(col[col.length - 1], fromCards[0])) {
+      playSound('place');
       moveCards(dragState.col, dragState.row, targetCol);
       dragState = null;
       return;
+    } else {
+      playSound('warning');
     }
+  } else {
+    playSound('drop');
   }
   dragState = null;
   render();
@@ -961,6 +1006,7 @@ function checkCompletion(col) {
   columns[col].splice(start, 13);
   if (columns[col].length > 0) columns[col][columns[col].length-1].faceUp = true;
   score += 100;
+  playSound('complete');
   render();
   if (completed.length === 8) setTimeout(showWin, 300);
 }
@@ -972,7 +1018,7 @@ function dealFromStock() {
   // On vérifie s'il y a au moins une colonne vide
   for (let i = 0; i < 10; i++) {
     if (columns[i].length === 0) {
-      // Une colonne est vide : on bloque silencieusement la distribution (pas de showMsg/pop-up)
+      playSound('warning');
       return; 
     }
   }
@@ -998,6 +1044,7 @@ function startFireworks() {
   canvas.id = 'win-canvas';
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  startFireworksSound();
   canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;cursor:pointer;';
   document.body.appendChild(canvas);
   const ctx = canvas.getContext('2d');
@@ -1203,6 +1250,7 @@ function startFireworks() {
 
   canvas.addEventListener('click', () => {
     if (!clickable) return;
+    stopFireworksSound();
     cancelAnimationFrame(animId);
     canvas.remove();
     showReplayDialog();
@@ -1243,8 +1291,8 @@ function showReplayDialog() {
       </div>
       <div class="wd-link"><a href="#" onclick="return false;">Obtenir plus de parties en ligne</a></div>
       <div class="wd-buttons">
-        <button class="wd-btn" onclick="document.getElementById('win-dialog').remove();newGame()">Rejouer</button>
-        <button class="wd-btn wd-btn-primary" onclick="document.getElementById('win-dialog').remove()">Quitter</button>
+        <button class="wd-btn" onclick="document.getElementById('win-dialog').remove();stopFireworksSound();newGame()">Rejouer</button>
+        <button class="wd-btn wd-btn-primary" onclick="document.getElementById('win-dialog').remove();stopFireworksSound()">Quitter</button>
       </div>
     </div>
   `;

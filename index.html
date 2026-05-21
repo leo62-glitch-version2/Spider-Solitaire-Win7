@@ -244,6 +244,25 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   color: #000; padding: 6px 20px; font-size: 13px; cursor: pointer;
 }
 #msg-overlay button:hover { background: #e5f1fb; }
+
+/* WIN ANIMATION */
+#win-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 9998;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.win-card {
+  position: fixed;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 2px 4px 8px rgba(0,0,0,0.5);
+  background: white;
+  z-index: 9999;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -781,8 +800,114 @@ function dealFromStock() {
 }
 
 function showWin() {
+  startWinAnimation();
+}
+
+function startWinAnimation() {
+  // Canvas de fond cliquable
+  const canvas = document.createElement('div');
+  canvas.id = 'win-canvas';
+  document.body.appendChild(canvas);
+
+  const suits = ['clubs','diamonds','hearts','spades'];
+  const ranks = ['A','K','Q','J','10'];
+  const cW = Math.round(DISPLAY_W * 0.9);
+  const cH = Math.round(cW * (CARD_H / CARD_W));
+  const gravity = 0.4;
+  const bounce = 0.72;
+  const cards = [];
+  let animId = null;
+  let clickable = false;
+
+  // Créer ~12 cartes qui tombent depuis le haut
+  const count = 12;
+  for (let i = 0; i < count; i++) {
+    const suit = suits[i % suits.length];
+    const rank = ranks[i % ranks.length];
+
+    const el = document.createElement('div');
+    el.className = 'win-card';
+    el.style.width = cW + 'px';
+    el.style.height = cH + 'px';
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+    inner.style.cssText = cardBg(suit, rank);
+    el.appendChild(inner);
+    document.body.appendChild(el);
+
+    const x = Math.random() * (window.innerWidth - cW);
+    const y = -cH - Math.random() * window.innerHeight * 0.8;
+    const vx = (Math.random() - 0.5) * 6;
+    const vy = 2 + Math.random() * 4;
+
+    cards.push({ el, x, y, vx, vy, grounded: false });
+  }
+
+  // Lancer les cartes en décalé
+  let launched = 0;
+  function launchNext() {
+    if (launched < cards.length) {
+      launched++;
+      setTimeout(launchNext, 180 + Math.random() * 120);
+    } else {
+      // Toutes lancées, activer le clic après 1.5s
+      setTimeout(() => { clickable = true; }, 1500);
+    }
+  }
+  launchNext();
+
+  const floor = window.innerHeight - cH;
+
+  function animate() {
+    animId = requestAnimationFrame(animate);
+    for (let i = 0; i < launched; i++) {
+      const c = cards[i];
+      c.vy += gravity;
+      c.x += c.vx;
+      c.y += c.vy;
+
+      // Rebond sur le sol
+      if (c.y >= floor) {
+        c.y = floor;
+        c.vy = -Math.abs(c.vy) * bounce;
+        if (Math.abs(c.vy) < 1.5) {
+          c.vy = 0;
+          c.grounded = true;
+        }
+        // Friction latérale
+        c.vx *= 0.85;
+      }
+
+      // Rebond sur les bords
+      if (c.x < 0) { c.x = 0; c.vx = Math.abs(c.vx) * 0.7; }
+      if (c.x > window.innerWidth - cW) { c.x = window.innerWidth - cW; c.vx = -Math.abs(c.vx) * 0.7; }
+
+      c.el.style.left = c.x + 'px';
+      c.el.style.top = c.y + 'px';
+    }
+  }
+  animate();
+
+  // Clic n'importe où → proposer de rejouer
+  canvas.addEventListener('click', () => {
+    if (!clickable) return;
+    cancelAnimationFrame(animId);
+    // Nettoyer
+    cards.forEach(c => c.el.remove());
+    canvas.remove();
+    // Afficher dialog rejouer
+    showReplayDialog();
+  });
+}
+
+function showReplayDialog() {
   const overlay = document.getElementById('msg-overlay');
-  overlay.innerHTML = `<h2>🎉 Félicitations !</h2><p>Partie gagnée avec un score de <strong>${score}</strong> !</p><button onclick="document.getElementById('msg-overlay').style.display='none';newGame()">Nouvelle partie</button>`;
+  overlay.innerHTML = `
+    <h2>🎉 Félicitations !</h2>
+    <p>Partie gagnée avec un score de <strong>${score}</strong> !</p>
+    <button onclick="document.getElementById('msg-overlay').style.display='none';newGame()">Nouvelle partie</button>
+  `;
   overlay.style.display = 'flex';
 }
 function showMsg(title, msg) {

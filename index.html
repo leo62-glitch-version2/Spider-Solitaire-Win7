@@ -405,8 +405,6 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   pointer-events: none;
 }
 
-/* BADGE DÉBUG */
-#menu-debug { color: #cc6600; font-style: italic; }
 </style>
 </head>
 <body>
@@ -424,18 +422,6 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
             <li onclick="setDifficulty(4, event)">4 couleurs <span id="check-diff-4" class="check"></span></li>
           </ul>
         </li>
-      </ul>
-    </div>
-    <div class="menu-item-container">
-      <div class="menu-item" id="menu-debug">Débug</div>
-      <ul class="dropdown-menu" id="dropdown-debug">
-        <li id="dbg-win">🏆 Écran de fin (victoire)</li>
-        <li id="dbg-fireworks">🎆 Feux d'artifice seuls</li>
-        <li id="dbg-win-instant">⚡ Gagner instantanément</li>
-        <li class="menu-separator"></li>
-        <li id="dbg-reset-stats">🗑️ Réinitialiser les stats</li>
-        <li id="dbg-add-score">➕ +500 au score</li>
-        <li id="dbg-empty-stock">📦 Vider le stock</li>
       </ul>
     </div>
     <div class="menu-item" id="menu-aide">?</div>
@@ -1355,64 +1341,7 @@ function closeAllMenus() {
   submenuCouleurs.style.display = 'none';
   menuPartie.classList.remove('active');
   optOptions.classList.remove('active');
-  document.getElementById('dropdown-debug').style.display = 'none';
-  document.getElementById('menu-debug').classList.remove('active');
 }
-
-// ── DEBUG MENU ──────────────────────────────────────────────────────────────
-const menuDebug = document.getElementById('menu-debug');
-const dropdownDebug = document.getElementById('dropdown-debug');
-
-menuDebug.onclick = (e) => {
-  e.stopPropagation();
-  const isVisible = dropdownDebug.style.display === 'block';
-  closeAllMenus();
-  if (!isVisible) {
-    dropdownDebug.style.display = 'block';
-    menuDebug.classList.add('active');
-  }
-};
-
-document.getElementById('dbg-win').onclick = (e) => {
-  e.stopPropagation(); closeAllMenus();
-  showReplayDialog();
-};
-
-document.getElementById('dbg-fireworks').onclick = (e) => {
-  e.stopPropagation(); closeAllMenus();
-  startFireworks();
-};
-
-document.getElementById('dbg-win-instant').onclick = (e) => {
-  e.stopPropagation(); closeAllMenus();
-  columns = columns.map(() => []);
-  completed = [{suit:'spades'},{suit:'spades'},{suit:'hearts'},{suit:'hearts'},
-               {suit:'clubs'},{suit:'clubs'},{suit:'diamonds'},{suit:'diamonds'}];
-  stock = [];
-  score = 1200; moves = moves;
-  render();
-  setTimeout(showWin, 300);
-};
-
-document.getElementById('dbg-reset-stats').onclick = (e) => {
-  e.stopPropagation(); closeAllMenus();
-  if (confirm('Réinitialiser toutes les statistiques ?')) {
-    localStorage.removeItem('spider_stats');
-    alert('Stats réinitialisées.');
-  }
-};
-
-document.getElementById('dbg-add-score').onclick = (e) => {
-  e.stopPropagation(); closeAllMenus();
-  score += 500;
-  render();
-};
-
-document.getElementById('dbg-empty-stock').onclick = (e) => {
-  e.stopPropagation(); closeAllMenus();
-  stock = [];
-  render();
-};
 
 document.addEventListener('click', closeAllMenus);
 window.addEventListener('resize', () => render());

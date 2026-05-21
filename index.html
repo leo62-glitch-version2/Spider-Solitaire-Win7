@@ -1068,9 +1068,7 @@ function startFireworks() {
 
   function draw() {
     animId = requestAnimationFrame(draw);
-    // Légère persistance (effet de traîne) — comme Windows 7
-    ctx.fillStyle = 'rgba(0,20,0,0.18)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Rockets
     for (let i = rockets.length-1; i >= 0; i--) {
